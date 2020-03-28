@@ -1,0 +1,84 @@
+---
+title: "COVID-19 Test"
+output: html_notebook
+---
+### Load Libraries
+```{r}
+library(tidyverse)
+library(tidycensus)
+library(ggrepel)
+```
+
+### Read in the NY Time Data
+```{r}
+# Get the NY Times data from github
+countiesURL <- "https://raw.githubusercontent.com/nytimes/covid-19-data/master/us-counties.csv"
+countiesData <- read_csv(url(countiesURL))
+```
+
+### Generate some test plots
+```{r}
+#####################
+# Raw counts
+#####################
+# Parameters
+stateUse = "California"
+minCases = 25
+startDate = "2020-03-06"
+endDate = "2020-03-27"
+# Plot
+
+selected_counties <- countiesData %>%
+  group_by(state, county) %>%
+  summarise(max_cases_per_county = max(cases)) %>%
+  mutate(has_enough_cases = (max_cases_per_county > minCases)) %>%
+  filter(has_enough_cases) %>%
+  ungroup
+
+countiesData <- countiesData %>%
+  left_join(selected_counties, by = c("state", "county"))
+```
+
+### Linear Scale
+```{r fig.height=6, fig.width=8}
+countiesData %>%
+  filter(state == "California" & 
+           date >= startDate &
+           date <= endDate &
+           has_enough_cases) %>%
+    mutate(label = if_else(date == max(date), as.character(county), NA_character_)) %>%
+  ggplot(aes(x = date, y = cases, group = county, color = county)) + 
+  geom_line() + 
+  geom_point() +
+  geom_label_repel(aes(label = label),
+                   nudge_x = 1,
+                   na.rm = TRUE) +
+  ggtitle(label = paste0("Cumulative Cases in Each ", stateUse, "County - Linear Plot"), subtitle = paste0("minimum each county is ",minCases," cases")) +
+  xlab(paste0("Date starting: ",endDate)) +
+  ylab("Cumulative Cases") +
+  theme_bw(base_size = 12) +
+  theme(legend.position = "none")
+```
+
+### Log Scale
+```{r fig.height=6, fig.width=8}
+# Log scale
+countiesData %>%
+  filter(state == "California" & 
+           date >= startDate &
+           date <= endDate &
+           has_enough_cases) %>%
+  mutate(label = if_else(date == max(date), as.character(county), NA_character_)) %>%
+  ggplot(aes(x = date, y = cases, group = county, color = county)) + 
+  geom_line() + 
+  geom_point() +
+  geom_label_repel(aes(label = label),
+                   nudge_x = 1,
+                   na.rm = TRUE) +
+  scale_y_continuous(trans='log10') +
+  ggtitle(label = paste0("Cumulative Cases in Each ", stateUse, "County - Log Plot"), subtitle = paste0("minimum each county is ",minCases," cases")) +
+  xlab(paste0("Date starting: ",endDate)) +
+  ylab("Cumulative Cases") +
+  theme_bw(base_size = 12) +
+  theme(legend.position = "none")
+```
