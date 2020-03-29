@@ -1,22 +1,75 @@
 ---
 title: "COVID-19 Test"
-output: html_notebook
+output:
+  html_document:
+    df_print: paged
+  html_notebook: default
 ---
 ### Load Libraries
 ```{r}
 library(tidyverse)
 library(tidycensus)
 library(ggrepel)
+library(tigris)
+library(leaflet)
 ```
 
-### Read in the NY Time Data
+### Read in the NY Times Data
 ```{r}
 # Get the NY Times data from github
 countiesURL <- "https://raw.githubusercontent.com/nytimes/covid-19-data/master/us-counties.csv"
 countiesData <- read_csv(url(countiesURL))
 ```
 
-### Generate some test plots
+### Use Census API to get the populations of each county
+```{r}
+# Get census API key from: https://api.census.gov/data/key_signup.html
+# census_api_key("YOUR KEY GOES HERE")
+census_api_key("779c8b33af41fa4dbf19a22405c65c780fd379ac")
+
+# Get population estimates per county from the US Census API
+popEst <- get_estimates(geography = "county",
+                        product = "population")
+popEst <- popEst %>%
+  filter(variable == "POP")
+```
+
+### Join the census data with the NY Times Data
+# Need to fix places like NYC, etc.
+```{r}
+# Join Data
+countiesData <- left_join(countiesData, popEst, by = c("fips" = "GEOID"))
+countiesData <- countiesData %>%
+  filter(!is.na(value)) # Here we are removing places like NYC -- need to update this....
+# Get cases and deaths per million population
+countiesData <- countiesData %>%
+  mutate(casesPerMillion = (cases/value)*1000000) %>%
+  mutate(deathsPerMillion = (deaths/value)*1000000) 
+```
+
+### Set t = 0 to the first observed case in each county
+```{r}
+# Set t=0 to the date of the first case
+time_zero <- countiesData %>%
+  group_by(state, county) %>%
+  summarise(first_case = min(date)) %>%
+  ungroup
+
+# Set a new column for the time elapsed between the date column and the t=0 date for each row
+countiesData <- countiesData %>%
+  left_join(time_zero, by = c("state", "county")) %>%
+  mutate(time = as.numeric(date - first_case))
+
+# Add a label for the max time for each county
+max_date_label <- countiesData %>%
+  group_by(state, county) %>%
+  summarise(max_time = max(time))
+
+countiesData <- countiesData %>%
+  left_join(max_date_label, by = c("state", "county"))
+```
+
+### Generate plots for some case studies (can easily scale these up)
 ```{r}
 #####################
 # Raw counts
@@ -53,8 +106,8 @@ countiesData %>%
   geom_label_repel(aes(label = label),
                    nudge_x = 1,
                    na.rm = TRUE) +
-  ggtitle(label = paste0("Cumulative Cases in Each ", stateUse, "County - Linear Plot"), subtitle = paste0("minimum each county is ",minCases," cases")) +
-  xlab(paste0("Date starting: ",endDate)) +
+  ggtitle(label = paste0("Cumulative Cases in Each ", stateUse, " County - Linear Plot"), subtitle = paste0("minimum each county is ",minCases," cases")) +
+  xlab(paste0("Date starting: ",startDate)) +
   ylab("Cumulative Cases") +
   theme_bw(base_size = 12) +
   theme(legend.position = "none")
@@ -76,9 +129,98 @@ countiesData %>%
                    nudge_x = 1,
                    na.rm = TRUE) +
   scale_y_continuous(trans='log10') +
-  ggtitle(label = paste0("Cumulative Cases in Each ", stateUse, "County - Log Plot"), subtitle = paste0("minimum each county is ",minCases," cases")) +
-  xlab(paste0("Date starting: ",endDate)) +
+  ggtitle(label = paste0("Cumulative Cases in Each ", stateUse, " County - Log Plot"), subtitle = paste0("minimum each county is ",minCases," cases")) +
+  xlab(paste0("Date starting: ",startDate)) +
   ylab("Cumulative Cases") +
   theme_bw(base_size = 12) +
   theme(legend.position = "none")
 ```
+
+### Log Scale -- cases per million
+```{r fig.height=6, fig.width=8}
+# Log scale
+countiesData %>%
+  filter(state == "California" & 
+           date >= startDate &
+           date <= endDate &
+           has_enough_cases) %>%
+  mutate(label = if_else(date == max(date), as.character(county), NA_character_)) %>%
+  ggplot(aes(x = date, y = casesPerMillion, group = county, color = county)) + 
+  geom_line() + 
+  geom_point() +
+  geom_label_repel(aes(label = label),
+                   nudge_x = 1,
+                   na.rm = TRUE) +
+  scale_y_continuous(trans='log10') +
+  ggtitle(label = paste0("Cumulative Cases Per Million in Each ", stateUse, " County - Log Plot"), subtitle = paste0("minimum each county is ",minCases," cases")) +
+  xlab(paste0("Date starting: ",startDate)) +
+  ylab("Cumulative Cases Per Million") +
+  theme_bw(base_size = 12) +
+  theme(legend.position = "none")
+```
+
+### Log Scale -- cases per million -- first case, t=0
+```{r fig.height=6, fig.width=8}
+# Log scale
+countiesData %>%
+  filter(state == "California" & 
+           has_enough_cases) %>%
+  mutate(label = if_else(time == max_time, as.character(county), NA_character_)) %>%
+  ggplot(aes(x = time, y = casesPerMillion, group = county, color = county)) + 
+  geom_line() + 
+  geom_point() +
+  geom_label_repel(aes(label = label),
+                   nudge_x = 1,
+                   na.rm = TRUE) +
+  scale_y_continuous(trans='log10') +
+  ggtitle(label = paste0("Cumulative Cases Per Million in Each ", stateUse, " County - Log Plot"), subtitle = paste0("minimum each county is ",minCases," cases")) +
+  xlab("Time Since First Case") +
+  ylab("Cumulative Cases Per Million") +
+  theme_bw(base_size = 12) +
+  theme(legend.position = "none")
+```
+
+### Generate an interactive map
+```{r message=FALSE, warning=FALSE}
+# This is based of off the tutorial here: http://zevross.com/blog/2015/10/14/manipulating-and-mapping-us-census-data-in-r-using-the-acs-tigris-and-leaflet-packages-3/
+
+# grab the spatial data (tigris)
+# Get the counties of interest
+countiesUse <- unique(countiesData$county[which(countiesData$state=="California")])
+
+# Map the counties to the spatial data
+tracts <- tracts(state = "California", county = countiesUse, cb = TRUE)
+tracts$fips = paste0(tracts$STATEFP,tracts$COUNTYFP)
+
+# Join our data frame with the counts data to the spatial data
+counts_merged <- geo_join(tracts, countiesData[which(countiesData$state=="California" & countiesData$date == endDate),], "fips", "fips", how = 'inner')
+# there are some tracts with no land that we should exclude
+counts_merged <- counts_merged[counts_merged$ALAND>0,]
+
+# Setup the pop-up that comes up when hovering
+popup <- paste0("County: ", counts_merged$county, "<br>", "Cases per million: ", round(counts_merged$casesPerMillion,2))
+pal <- colorNumeric(
+  palette = "YlGnBu",
+  domain = counts_merged$casesPerMillion
+)
+
+# Plot everything
+map3<-leaflet() %>%
+  addProviderTiles("CartoDB.Positron") %>%
+  addPolygons(data = counts_merged, 
+              fillColor = ~pal(casesPerMillion), 
+              color = "#b2aeae", # you need to use hex colors
+              fillOpacity = 0.7, 
+              weight = 1, 
+              smoothFactor = 0.2,
+              popup = popup) %>%
+  addLegend(pal = pal, 
+            values = counts_merged$casesPerMillion, 
+            position = "bottomright", 
+            title = "Cases per million") 
+map3
+```
+
+
+
+
