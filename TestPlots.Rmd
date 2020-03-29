@@ -1,9 +1,9 @@
 ---
 title: "COVID-19 Test"
 output:
-  html_document:
-    df_print: paged
-  html_notebook: default
+  # html_document:
+  #   df_print: paged
+  # html_notebook: default
 ---
 ### Load Libraries
 ```{r}
@@ -12,6 +12,12 @@ library(tidycensus)
 library(ggrepel)
 library(tigris)
 library(leaflet)
+library(maps)
+library(ggmap)
+library(gganimate)
+library(gifski)
+library(transformr)
+library(magick)
 ```
 
 ### Read in the NY Times Data
@@ -19,6 +25,22 @@ library(leaflet)
 # Get the NY Times data from github
 countiesURL <- "https://raw.githubusercontent.com/nytimes/covid-19-data/master/us-counties.csv"
 countiesData <- read_csv(url(countiesURL))
+# Fix NYC
+countiesData[which(countiesData$county == "New York City" & countiesData$state == "New York"),"fips"] <- "NYC"
+# Fix KC Mo
+kcCounties = c("Cass", "Clay", "Jackson", "Platte", "Kansas City")
+kcCountyData = countiesData[which(countiesData$county %in% kcCounties & countiesData$state == "Missouri"),]
+
+kcCountyData = kcCountyData %>%
+  select(-c(county,state,fips))
+
+kcCountyData <- kcCountyData %>%
+  group_by(date) %>%
+  summarise_all(sum)
+
+kcCountyData = tibble(date = kcCountyData$date, county = "Kansas City", state = "Missouri", fips = "KC", cases = kcCountyData$cases, deaths = kcCountyData$deaths)
+countiesData = countiesData[-which(countiesData$county %in% kcCounties & countiesData$state == "Missouri"),]
+countiesData = rbind(countiesData,kcCountyData)
 ```
 
 ### Use Census API to get the populations of each county
@@ -32,6 +54,21 @@ popEst <- get_estimates(geography = "county",
                         product = "population")
 popEst <- popEst %>%
   filter(variable == "POP")
+
+# Fix NYC
+nycCounties = c("New York County, New York", "Kings County, New York", "Queens County, New York", 
+                "Bronx County, New York", "Richmond County, New York")
+nycCounts = sum(popEst[which(popEst$NAME %in% nycCounties),"value"])
+nycCounts = tibble(NAME = "New York City, New York", GEOID = "NYC", variable = "POP", value = nycCounts)
+popEst = popEst[-which(popEst$NAME %in% nycCounties),]
+popEst = rbind(popEst,nycCounts)
+
+# Fix KC Mo -- here, combine Cass, Clay, Jackson and Platte with KC
+kcCounties = c("Cass County, Missouri", "Clay County, Missouri", "Jackson County, Missouri", "Platte County, Missouri")
+kcCounts = sum(popEst[which(popEst$NAME %in% kcCounties),"value"])
+kcCounts = tibble(NAME = "Kansas City, Missouri", GEOID = "KC", variable = "POP", value = kcCounts)
+popEst = popEst[-which(popEst$NAME %in% kcCounties),]
+popEst = rbind(popEst,kcCounts)
 ```
 
 ### Join the census data with the NY Times Data
@@ -39,8 +76,10 @@ popEst <- popEst %>%
 ```{r}
 # Join Data
 countiesData <- left_join(countiesData, popEst, by = c("fips" = "GEOID"))
+
 countiesData <- countiesData %>%
-  filter(!is.na(value)) # Here we are removing places like NYC -- need to update this....
+  filter(!is.na(value)) # Here we are removing all the "Unknown" -- need to update this.... potentially use some of Paul's suggestions?
+
 # Get cases and deaths per million population
 countiesData <- countiesData %>%
   mutate(casesPerMillion = (cases/value)*1000000) %>%
@@ -220,6 +259,345 @@ map3<-leaflet() %>%
             title = "Cases per million") 
 map3
 ```
+
+### Generate gif for just California
+```{r}
+# Get the boundaries of the states and counties
+states <- map_data("state")
+state_df <- subset(states, region == tolower("California"))
+counties <- map_data("county")
+state_county <- subset(counties, region == tolower("California"))
+
+# Get the base map for the state
+state_base <- ggplot(data = state_df, mapping = aes(x = long, y = lat, group = group)) + 
+  coord_fixed(1.3) + 
+  geom_polygon(color = "black", fill = "gray")
+
+# Join the state spatial data with the covid-19 data
+# stateSubset = countiesData[which(countiesData$state=="California" & countiesData$date == endDate),]
+stateSubset = countiesData[which(countiesData$state=="California"),]
+stateSubset$county = tolower(stateSubset$county)
+stateSubset <- inner_join(state_county, stateSubset, by = c("subregion" = "county"))
+
+# By date
+p1 <- state_base + 
+  geom_polygon(data = stateSubset, aes(fill = casesPerMillion), color = "white") +
+  geom_polygon(color = "black", fill = NA) +
+  scale_fill_viridis_c(trans = "log2") +
+  # Here comes the gganimate specific bits
+  labs(title = 'Date: {frame_time}') +
+  transition_time(date) +
+  # ease_aes('linear') +
+  # scale_fill_gradient(trans = "log10") +
+  theme_bw() +
+  theme(
+    axis.text = element_blank(),
+    axis.line = element_blank(),
+    axis.ticks = element_blank(),
+    panel.border = element_blank(),
+    panel.grid = element_blank(),
+    axis.title = element_blank())
+p1
+
+anim_save(filename = "./CaliforniaCasesPerMillion.gif",animation = animate(p1, nframes = 100, duration = 40, fps = 10, end_pause = 20, rewind = FALSE))
+
+# Slo-mo
+p1_gif <- animate(p1, width = 480, height = 480, nframes = 100, duration = 10, fps = 10, end_pause = 10, rewind = FALSE)
+
+p1_mgif <- image_read(p1_gif)
+
+p1_new_gif <- image_append(c(p1_mgif[1]))
+for(i in 2:100){
+  if(i <= 50){
+    combined <- image_append(c(p1_mgif[i]))
+    p1_new_gif <- c(p1_new_gif, combined)
+  } else{
+    if(i > 50 & i <= 75){
+      combined <- image_append(c(p1_mgif[i]))
+      p1_new_gif <- c(p1_new_gif, combined)
+      p1_new_gif <- c(p1_new_gif, combined)
+      p1_new_gif <- c(p1_new_gif, combined)
+      p1_new_gif <- c(p1_new_gif, combined)
+      p1_new_gif <- c(p1_new_gif, combined)
+    }
+    else{
+      combined <- image_append(c(p1_mgif[i]))
+      p1_new_gif <- c(p1_new_gif, combined)
+      p1_new_gif <- c(p1_new_gif, combined)
+      p1_new_gif <- c(p1_new_gif, combined)
+      p1_new_gif <- c(p1_new_gif, combined)
+      p1_new_gif <- c(p1_new_gif, combined)
+      p1_new_gif <- c(p1_new_gif, combined)
+      p1_new_gif <- c(p1_new_gif, combined)
+      p1_new_gif <- c(p1_new_gif, combined)
+      p1_new_gif <- c(p1_new_gif, combined)
+      p1_new_gif <- c(p1_new_gif, combined)
+    }
+  }
+}
+
+anim_save(filename = "./CaliforniaCasesPerMillionSloMo.gif",animation = p1_new_gif)
+
+
+# TRY TIME SINCE FIRST CASE?!?!
+# p1 <- state_base + 
+#   geom_polygon(data = stateSubset, aes(fill = casesPerMillion), color = "white") +
+#   geom_polygon(color = "black", fill = NA) +
+#   # Here comes the gganimate specific bits
+#   labs(title = 'Time since first case: {frame_time}') +
+#   transition_time(time) +
+#   # ease_aes('linear') +
+#   # scale_fill_gradient(trans = "log10") +
+#   theme_bw() +
+#   theme(
+#     axis.text = element_blank(),
+#     axis.line = element_blank(),
+#     axis.ticks = element_blank(),
+#     panel.border = element_blank(),
+#     panel.grid = element_blank(),
+#     axis.title = element_blank())
+# p1
+```
+
+### Generate gif for multiple states
+```{r}
+
+# Specify a new start date -- make the video better
+newStart = as.Date("2020-03-04")
+
+# Get the max value to make all the scales the same range
+maxVal = max(countiesData$casesPerMillion[which(countiesData$state %in% c("California","Washington","Texas","New York"))])
+
+# Get the boundaries of the states and counties
+states <- map_data("state")
+ca_df <- subset(states, region == tolower("California"))
+wa_df <- subset(states, region == tolower("Washington"))
+tx_df <- subset(states, region == tolower("Texas"))
+ny_df <- subset(states, region == tolower("New York"))
+
+counties <- map_data("county")
+# Fix for NYC
+nycCounties = c("new york","kings","queens","bronx","richmond")
+counties[which(counties$region == "new york" & counties$subregion %in% nycCounties),"subregion"] <- "new york city"
+
+ca_county <- subset(counties, region == tolower("California"))
+wa_county <- subset(counties, region == tolower("Washington"))
+tx_county <- subset(counties, region == tolower("Texas"))
+ny_county <- subset(counties, region == tolower("New York"))
+
+# Get the base map for the state
+ca_base <- ggplot(data = ca_df, mapping = aes(x = long, y = lat, group = group)) + 
+  coord_fixed(1.3) + 
+  geom_polygon(color = "black", fill = "gray")
+
+wa_base <- ggplot(data = wa_df, mapping = aes(x = long, y = lat, group = group)) + 
+  coord_fixed(1.3) + 
+  geom_polygon(color = "black", fill = "gray")
+
+tx_base <- ggplot(data = tx_df, mapping = aes(x = long, y = lat, group = group)) + 
+  coord_fixed(1.3) + 
+  geom_polygon(color = "black", fill = "gray")
+
+ny_base <- ggplot(data = ny_df, mapping = aes(x = long, y = lat, group = group)) + 
+  coord_fixed(1.3) + 
+  geom_polygon(color = "black", fill = "gray")
+
+# Join the state spatial data with the covid-19 data
+# stateSubset = countiesData[which(countiesData$state=="California" & countiesData$date == endDate),]
+caSubset = countiesData[which(countiesData$state=="California"),]
+caSubset$county = tolower(caSubset$county)
+caSubset <- inner_join(ca_county, caSubset, by = c("subregion" = "county"))
+
+waSubset = countiesData[which(countiesData$state=="Washington"),]
+waSubset$county = tolower(waSubset$county)
+waSubset <- inner_join(wa_county, waSubset, by = c("subregion" = "county"))
+
+txSubset = countiesData[which(countiesData$state=="Texas"),]
+txSubset$county = tolower(txSubset$county)
+txSubset <- inner_join(tx_county, txSubset, by = c("subregion" = "county"))
+
+nySubset = countiesData[which(countiesData$state=="New York"),]
+nySubset$county = tolower(nySubset$county)
+nySubset <- inner_join(ny_county, nySubset, by = c("subregion" = "county"))
+
+# By date
+p1 <- ca_base + 
+  geom_polygon(data = caSubset[which(caSubset$date>=newStart),], aes(fill = casesPerMillion), color = "white") +
+  geom_polygon(color = "black", fill = NA) +
+  scale_fill_viridis_c(limits=c(1,maxVal),trans = "log2") +
+  labs(title = 'Date: {frame_time}') +
+  transition_time(date) +
+  theme_bw() +
+  theme(
+    axis.text = element_blank(),
+    axis.line = element_blank(),
+    axis.ticks = element_blank(),
+    panel.border = element_blank(),
+    panel.grid = element_blank(),
+    axis.title = element_blank())
+
+p2 <- wa_base + 
+  geom_polygon(data = waSubset[which(waSubset$date>=newStart),], aes(fill = casesPerMillion), color = "white") +
+  geom_polygon(color = "black", fill = NA) +
+  scale_fill_viridis_c(limits=c(1,maxVal),trans = "log2") +
+  labs(title = 'Date: {frame_time}') +
+  transition_time(date) +
+  theme_bw() +
+  theme(
+    axis.text = element_blank(),
+    axis.line = element_blank(),
+    axis.ticks = element_blank(),
+    panel.border = element_blank(),
+    panel.grid = element_blank(),
+    axis.title = element_blank())
+
+p3 <- tx_base + 
+  geom_polygon(data = txSubset[which(txSubset$date>=newStart),], aes(fill = casesPerMillion), color = "white") +
+  geom_polygon(color = "black", fill = NA) +
+  scale_fill_viridis_c(limits=c(1,maxVal),trans = "log2") +
+  labs(title = 'Date: {frame_time}') +
+  transition_time(date) +
+  theme_bw() +
+  theme(
+    axis.text = element_blank(),
+    axis.line = element_blank(),
+    axis.ticks = element_blank(),
+    panel.border = element_blank(),
+    panel.grid = element_blank(),
+    axis.title = element_blank())
+
+p4 <- ny_base + 
+  geom_polygon(data = nySubset[which(nySubset$date>=newStart),], aes(fill = casesPerMillion), color = "white") +
+  geom_polygon(color = "black", fill = NA) +
+  scale_fill_viridis_c(limits=c(1,maxVal),trans = "log2") +
+  labs(title = 'Date: {frame_time}') +
+  transition_time(date) +
+  theme_bw() +
+  theme(
+    axis.text = element_blank(),
+    axis.line = element_blank(),
+    axis.ticks = element_blank(),
+    panel.border = element_blank(),
+    panel.grid = element_blank(),
+    axis.title = element_blank())
+
+a_gif <- animate(p1, width = 240, height = 240, nframes = 100, duration = 20, fps = 10, end_pause = 20, rewind = FALSE)
+b_gif <- animate(p2, width = 240, height = 240, nframes = 100, duration = 20, fps = 10, end_pause = 20, rewind = FALSE)
+c_gif <- animate(p3, width = 240, height = 240, nframes = 100, duration = 20, fps = 10, end_pause = 20, rewind = FALSE)
+d_gif <- animate(p4, width = 240, height = 240, nframes = 100, duration = 20, fps = 10, end_pause = 20, rewind = FALSE)
+
+a_mgif <- image_read(a_gif)
+b_mgif <- image_read(b_gif)
+c_mgif <- image_read(c_gif)
+d_mgif <- image_read(d_gif)
+
+new_gif <- image_append(c(a_mgif[1], b_mgif[1], c_mgif[1], d_mgif[1]))
+for(i in 2:200){
+  combined <- image_append(c(a_mgif[i], b_mgif[i], c_mgif[i], d_mgif[i]))
+  new_gif <- c(new_gif, combined)
+}
+
+# new_gif
+
+anim_save(filename = "./MultiStateCasesPerMillion.gif",animation = new_gif)
+
+
+
+# Slo-mo
+a_gif <- animate(p1, width = 240, height = 240, nframes = 100, duration = 10, fps = 10, end_pause = 5, rewind = FALSE)
+b_gif <- animate(p2, width = 240, height = 240, nframes = 100, duration = 10, fps = 10, end_pause = 5, rewind = FALSE)
+c_gif <- animate(p3, width = 240, height = 240, nframes = 100, duration = 10, fps = 10, end_pause = 5, rewind = FALSE)
+d_gif <- animate(p4, width = 240, height = 240, nframes = 100, duration = 10, fps = 10, end_pause = 5, rewind = FALSE)
+
+a_mgif <- image_read(a_gif)
+b_mgif <- image_read(b_gif)
+c_mgif <- image_read(c_gif)
+d_mgif <- image_read(d_gif)
+
+new_gif <- image_append(c(a_mgif[1], b_mgif[1], c_mgif[1], d_mgif[1]))
+for(i in 2:100){
+  if(i <= 50){
+    combined <- image_append(c(a_mgif[i], b_mgif[i], c_mgif[i], d_mgif[i]))
+    new_gif <- c(new_gif, combined)
+  } else{
+    if(i > 50 & i <= 75){
+      combined <- image_append(c(a_mgif[i], b_mgif[i], c_mgif[i], d_mgif[i]))
+      new_gif <- c(new_gif, combined)
+      new_gif <- c(new_gif, combined)
+      new_gif <- c(new_gif, combined)
+      new_gif <- c(new_gif, combined)
+      new_gif <- c(new_gif, combined)
+    }
+    else{
+      combined <- image_append(c(a_mgif[i], b_mgif[i], c_mgif[i], d_mgif[i]))
+      new_gif <- c(new_gif, combined)
+      new_gif <- c(new_gif, combined)
+      new_gif <- c(new_gif, combined)
+      new_gif <- c(new_gif, combined)
+      new_gif <- c(new_gif, combined)
+      new_gif <- c(new_gif, combined)
+      new_gif <- c(new_gif, combined)
+      new_gif <- c(new_gif, combined)
+      new_gif <- c(new_gif, combined)
+      new_gif <- c(new_gif, combined)
+    }
+  }
+}
+
+anim_save(filename = "./MultiStateCasesPerMillionSloMo.gif",animation = new_gif)
+
+
+
+```
+
+### Try NYC and Mo plots
+```{r}
+# Get the boundaries of the states and counties
+states <- map_data("state")
+ny_df <- subset(states, region == tolower("New York"))
+
+counties <- map_data("county")
+# Fix for NYC
+nycCounties = c("new york","kings","queens","bronx","richmond")
+counties[which(counties$region == "new york" & counties$subregion %in% nycCounties),"subregion"] <- "new york city"
+ny_county <- subset(counties, region == tolower("New York"))
+
+# Get the base map for the state
+ny_base <- ggplot(data = ny_df, mapping = aes(x = long, y = lat, group = group)) + 
+  coord_fixed(1.3) + 
+  geom_polygon(color = "black", fill = "gray")
+
+# Join the state spatial data with the covid-19 data
+nySubset = countiesData[which(countiesData$state=="New York"),]
+nySubset$county = tolower(nySubset$county)
+nySubset <- inner_join(ny_county, nySubset, by = c("subregion" = "county"))
+
+p.ny <- ny_base + 
+  geom_polygon(data = nySubset[which(nySubset$date=="2020-03-27"),], aes(fill = casesPerMillion), color = "white") +
+  geom_polygon(color = "black", fill = NA) +
+  scale_fill_viridis_c(trans = "log2")
+p.ny
+
+# By date
+p.ny <- ny_base + 
+  geom_polygon(data = nySubset, aes(fill = casesPerMillion), color = "white") +
+  geom_polygon(color = "black", fill = NA) +
+  scale_fill_viridis_c(trans = "log2") +
+  labs(title = 'Date: {frame_time}') +
+  transition_time(date) +
+  theme_bw() +
+  theme(
+    axis.text = element_blank(),
+    axis.line = element_blank(),
+    axis.ticks = element_blank(),
+    panel.border = element_blank(),
+    panel.grid = element_blank(),
+    axis.title = element_blank())
+
+```
+
+
+
 
 
 
