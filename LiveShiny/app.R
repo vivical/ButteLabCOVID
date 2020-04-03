@@ -353,14 +353,14 @@ ui = fluidPage( style='margin-left:5px; margin-right:5px', title="COVID-19 Count
                     "R package."),
                   
                   fluidRow( p( class="col-xs-12 col-sm-7 col-md-5", style="padding-left:.8em;", strong("Team: "), # style="padding-left:0px",  margin-left:0px
-                               a(href="mailto:douglas.arneson@ucsf.edu","Douglas Arneson, ",inline = T, target = "_blank"), 
-                               a(href="https://twitter.com/atulbutte?s=20","Atul Butte, ",inline = T, target = "_blank"),
+                               a(href="mailto:douglas.arneson@ucsf.edu","Douglas Arneson, ",inline = T, target = "_blank"),
                                a(href="https://twitter.com/pbleic?s=20","Paul Bleicher, ",inline = T, target = "_blank"),
+                               a(href="https://twitter.com/atulbutte?s=20","Atul Butte, ",inline = T, target = "_blank"),
                                a(href="mailto:matthew.elliott@ucsf.edu","Matthew Elliott, ",inline = T, target = "_blank"),
-                               a(href="mailto:arman.mosenia@ucsf.edu","Arman Mosenia, ",inline = T, target = "_blank"),
+                               a(href="https://twitter.com/armanmosenia?s=20","Arman Mosenia, ",inline = T, target = "_blank"),
                                a(href="mailto:boris.oskotsky@ucsf.edu","Boris Oskotsky, ",inline = T, target = "_blank"),
-                               a(href="mailto:vivek.rudrapatna@ucsf.edu","Vivek Rudrapatna, ",inline = T, target = "_blank"),
-                               a(href="mailto:rohit.vashisht@ucsf.edu","Rohit Vashisht, ",inline = T, target = "_blank"),
+                               a(href="https://twitter.com/vivicality?s=20","Vivek Rudrapatna, ",inline = T, target = "_blank"),
+                               a(href="https://twitter.com/vashishtrv?s=20","Rohit Vashisht, ",inline = T, target = "_blank"),
                                a(href="mailto:travis.zack@ucsf.edu","Travis Zack",inline = T, target = "_blank")
                   )),
                   
@@ -448,6 +448,15 @@ server = function(input, output, session) {
                     multiple = TRUE
     )
   })
+  
+  observeEvent( c(input$cCounty), {
+    if( "All" %in% input$cCounty & length(input$cCounty)==2 ){ # removes all when people add a county
+      updateSelectInput(session, "cCounty", selected= input$cCounty[input$cCounty!="All"]  )
+    }
+    if(  "All" %in% input$cCounty & length(input$cCounty)>2 ){
+      updateSelectInput(session, "cCounty", selected= c("All")  )
+    }
+  })  
   
   ######################################################################
   #  Main Plot
@@ -658,15 +667,10 @@ server = function(input, output, session) {
           ggplot(aes(x = time, y = value, group = county, color = county,
                      text = paste0("Value: ", round(value), "</br></br>County: ", county, "</br>Time: "))) +
           geom_line() +
-          geom_line(data = everyTwoDays, color = "black", linetype = "longdash" ) +
-          geom_line(data = everyFourDays, color = "black", linetype = "longdash" ) +
           # xlim(min(dat$time),max(dat$time)+3) +
           geom_text(data = labelDat, aes(label = label), nudge_x = 0.15) +
-          annotate(geom="text", x = max(everyTwoDays$time) + 0.15, y=max(everyTwoDays$value), label="Doubling every 2 days", color="black") +
-          annotate(geom="text", x = max(everyFourDays$time) + 0.15, y=max(everyFourDays$value), label="Doubling every 4 days", color="black") +
           # geom_label_repel(aes(label = label), nudge_x = 1, na.rm = TRUE) + # this does not work in plotly
           ggtitle(label = paste0(annoTitle," - ",scaleAnno), subtitle = paste0("minimum each county is ",input$mCases," cases")) +
-          # xlab(paste0("Dates from: ",format(input$daterange1[1],"%m/%d")," - ",format(input$daterange1[2], "%m/%d"))) +
           ylab(annoYlab) +
           xAxis + # x-axis labels (time format)
           plotScale + #y-axis scale
@@ -674,6 +678,22 @@ server = function(input, output, session) {
           theme(legend.title=element_blank())
         #theme(legend.position = "none")
       )
+      
+      #Fix x-axis
+      if(input$uTime == "absoluteT"){
+        p1 <- p1 +
+          xlab(paste0("Dates from: ",format(input$daterange1[1],"%m/%d")," - ",format(input$daterange1[2], "%m/%d")))
+      }
+      
+      #Only include the doubling lines if we are using relative time
+      if(input$uTime == "realtiveT"){
+        p1 <- p1 +
+          xlab("Days after the first 10 cases") +
+          geom_line(data = everyTwoDays, color = "black", linetype = "longdash" ) +
+          geom_line(data = everyFourDays, color = "black", linetype = "longdash" ) +
+          annotate(geom="text", x = max(everyTwoDays$time) + 0.15, y=max(everyTwoDays$value), label="Doubling every 2 days", color="black") +
+          annotate(geom="text", x = max(everyFourDays$time) + 0.15, y=max(everyFourDays$value), label="Doubling every 4 days", color="black")
+      }
       
       ggplotly(p1, tooltip = "text") %>%
         style(textposition = "right") %>%
@@ -705,6 +725,18 @@ server = function(input, output, session) {
           theme(legend.title=element_blank())
         #theme(legend.position = "none")
       )
+      
+      #Fix x-axis
+      if(input$uTime == "absoluteT"){
+        p1 <- p1 +
+          xlab(paste0("Dates from: ",format(input$daterange1[1],"%m/%d")," - ",format(input$daterange1[2], "%m/%d")))
+      }
+      
+      #Fix x-axis
+      if(input$uTime == "realtiveT"){
+        p1 <- p1 +
+          xlab("Days after the first 10 cases")
+      }
       
       ggplotly(p1, tooltip = "text") %>%
         style(textposition = "right") %>%
