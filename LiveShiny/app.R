@@ -171,21 +171,21 @@ countyDat <- countyDat %>%
 # from: https://www.timlrx.com/2019/12/17/speeding-up-r-plotly-webapps-r-x-javascript-part-i/
 # https://www.r-bloggers.com/speeding-up-r-plotly-web-apps-r-x-javascript-part-i/
 
-# plotly_mod_dep = function(p){
-#   deps <- p$dependencies
-#   deps_urls <- purrr::map(
-#     deps,
-#     ~if(.x$name == "plotly-basic") {
-#       .x$src = list(file=getwd())
-#       .x$script = "plotly-redirect-cdn-1.39.2.js"
-#       .x
-#     } else {
-#       .x
-#     }
-#   )
-#   p$dependencies <- deps_urls
-#   p
-# }
+plotly_mod_dep = function(p){
+  deps <- p$dependencies
+  deps_urls <- purrr::map(
+    deps,
+    ~if(.x$name == "plotly-basic") {
+      .x$src = list(file=getwd())
+      .x$script = "plotly-redirect-cdn-1.39.2.js"
+      .x
+    } else {
+      .x
+    }
+  )
+  p$dependencies <- deps_urls
+  p
+}
 
 ######################################################################
 ######################################################################
@@ -221,22 +221,23 @@ ui = fluidPage( style='margin-left:5px; margin-right:5px', title="COVID-19 Count
                 #      HTML("<hr style='padding:0px; margin:0px'>")
                 #)
                 #)),
-                div(class="jumbotron", style="background-color: white; padding-left:.4em; padding-right:.4em; padding-bottom:.1em; padding-top: .6em",
-                    
-                    div( #class="col-xs-10 col-md-11 col-lg-11",
-                      h1( class="text-center", style="padding-top:0px;margin-top:0px", "COVID-19 County Tracker") #, HTML("<i><font color='Crimson'>Tracker</font></i>") ) #,
-                    ),
-                    div( class="col-xs-12 col-md-offset-2 col-md-8 col-lg-offset-3 col-lg-6",
-                         HTML("<hr style='padding:0px; margin:0px'>")
-                    ),  
-                    
-                    h3(class="text-center", "COVID-19 cases across all 3,142 counties in the United States" ),
-                    p(class="text-center", style="padding-bottom:0px; margin-bottom:0px", 
-                      "COVID-19 is rapidly spreading across the United States, but at different rates and intensities.  Medical professionals, leaders, and policy makers should have the most up-to-date information about cases and growth trends in their local region.  The ",
-                      a(href="http://buttelab.ucsf.edu/", "Butte Lab",inline = T, target = "_blank"), " at UCSF has partnered with ", 
-                      a(href="https://twitter.com/pbleic?s=20", "Paul Bleicher",inline = T, target = "_blank"),
-                      "MD, PhD, former CEO of OptumLabs, to calculate and visualize COVID-19 statistics for every county in the United States. Use the tools below to view the most recent data for any region. For questons and feedback, please ",
-                      a(href="mailto:covid.tracker@bakar.institute", "contact us.",inline = T, target = "_blank") )
+                div( class="jumbotron", style="background-color: white; padding-left:.4em; padding-right:.4em; padding-bottom:.1em; padding-top: 1.3em", 
+                     
+                     p(tags$small(" .")),
+                     div( #class="col-xs-10 col-md-11 col-lg-11",
+                       h3( class="text-center", style="padding-top:0px;margin-top:0px", "COVID-19 County Tracker") #, HTML("<i><font color='Crimson'>Tracker</font></i>") ) #,
+                     ),
+                     fluidRow(div( class="col-xs-12 col-md-offset-2 col-md-8 col-lg-offset-3 col-lg-6",
+                                   HTML("<hr style='padding:0px; margin:0px'>")
+                     )),  
+                     
+                     h4(class="text-center", "COVID-19 cases across all 3,142 counties in the United States" ),
+                     p( tags$small( class="text-center", style="padding-bottom:0px; margin-bottom:0px", 
+                                    "COVID-19 is rapidly spreading across the United States, but at different rates and intensities.  Medical professionals, leaders, and policy makers should have the most up-to-date information about cases and growth trends in their local region.  The ",
+                                    a(href="http://buttelab.ucsf.edu/", "Butte Lab",inline = T, target = "_blank"), " at UCSF has partnered with ", 
+                                    a(href="https://twitter.com/pbleic?s=20", "Paul Bleicher",inline = T, target = "_blank"),
+                                    "MD, PhD, former CEO of OptumLabs, to calculate and visualize COVID-19 statistics for every county in the United States. Use the tools below to view the most recent data for any region. For questons and feedback, please ",
+                                    a(href="mailto:covid.tracker@bakar.institute", "contact us.",inline = T, target = "_blank") ) )
                 ),
                 
                 ######################################################################
@@ -252,7 +253,9 @@ ui = fluidPage( style='margin-left:5px; margin-right:5px', title="COVID-19 Count
                          #HTML('<span><i class="fas fa-caret-down"></i></span>'),
                          #tags$button( icon=icon("caret-down"), label="", class="btn btn-default text-center",  data-toggle="collapse", data-target="#demo" )
                      ),
+                     
                      div( id="demo", class="collapse",
+                          fluidRow( column(12, tags$hr() )),
                           fluidRow(
                             div( class="col-sm-3 col-xs-6", radioButtons("uPlot", "Plot by:",
                                                                          selected = "cases", # default value
@@ -299,9 +302,11 @@ ui = fluidPage( style='margin-left:5px; margin-right:5px', title="COVID-19 Count
                 #  Main Plot
                 ######################################################################
                 div( class="container-fluid",
-                     h1(class="text-center", textOutput("state_title",inline = T) ),
+                     h2(class="text-center", textOutput("state_title",inline = T) ),
                      # p(class="text-right", "View/hide a county by clicking it's name. Double-click to select only one county." , inline = T),
                      # plotOutput("stateLinePlot"),
+                     h4(class="text-center", textOutput("main_plot_title",inline = T) ),
+                     p(class="text-center",'View/hide a county by clicking it\'s name in the legend. Double-click to select only one county.'),
                      plotlyOutput("stateLinePlot"),
                      div( class="col-xs-4", align="right", 
                           h5("Select Counties:", style="padding-top: 1.1em")
@@ -316,18 +321,29 @@ ui = fluidPage( style='margin-left:5px; margin-right:5px', title="COVID-19 Count
                      #plotlyOutput("stateLinePlot")
                 ), # ends "mainPanel" from "Main Plot" section
                 
-                # Scratch
-                #county_list = (countyDat %>% filter(state==input$cState) %>% distinct(county) )$county
-                #county_list$county
                 
                 
                 ######################################################################
                 #  US Map and State Map
                 ######################################################################
                 fluidRow(
-                  div( class="col-xs-12 col-md-6", plotlyOutput("usaPlot") ),
+                  div( class="col-xs-12 col-md-6", 
+                       h4(class="text-center", textOutput("us_map_title",inline = T) ),
+                       plotlyOutput("usaPlot"),
+                       p(class="text-center", style="padding-bottom:0px; margin-bottom:0px", tags$small(   'Click and drag in plot to zoom selected region')),
+                       p(class="text-center", style="padding-bottom:0px; margin-bottom:0px", tags$small(   'Click "reset axes" in the upper-right to reset the plot')),
+                       p( tags$small( '.')) # this is here just for vertical space
+                  ),
                   # column(6, plotOutput("usaPlot") ),
-                  div( class="col-xs-12 col-md-6", plotlyOutput("stateMapPlot") )#,
+                  div( class="col-xs-12 col-md-6",
+                       h4(class="text-center", textOutput("state_map_title",inline = T) ),
+                       p(class="text-center", "(percentile ranks are relative to counties within the state)"),
+                       plotlyOutput("stateMapPlot"),
+                       p(class="text-center", style="padding-bottom:0px; margin-bottom:0px", tags$small(   'Click and drag in plot to zoom selected region')),
+                       p(class="text-center", style="padding-bottom:0px; margin-bottom:0px", tags$small(   'Click "reset axes" in the upper-right to reset the plot')),
+                       p( tags$small( '.')) # this is here just for vertical space
+                       
+                  )#,
                   # column(6, plotOutput("stateMapPlot") )
                   # Removed this to only have one way to set dates
                   # column( 12, align="center",
@@ -343,33 +359,45 @@ ui = fluidPage( style='margin-left:5px; margin-right:5px', title="COVID-19 Count
                 #  Footer Info
                 ######################################################################
                 div( #class="jumbotron", style="background-color: white; padding: .4em",
-                  h3( "Data Sources" ), # class="text-center",
-                  p(class="text-left",  "State and county infection data: ",
-                    a(href="https://github.com/nytimes/covid-19-data", "New York Times COVID-19",inline = T, target = "_blank"), "github."),
-                  p(class="text-left",  "US Census data: ",
-                    a(href="https://www.census.gov/developers/", "US Census API",inline = T, target = "_blank"),
-                    "and the",
-                    a(href="https://walkerke.github.io/tidycensus/", "tidycensus",inline = T, target = "_blank"),
-                    "R package."),
                   
-                  fluidRow( p( class="col-xs-12 col-sm-7 col-md-5", style="padding-left:.8em;", strong("Team: "), # style="padding-left:0px",  margin-left:0px
-                               a(href="mailto:douglas.arneson@ucsf.edu","Douglas Arneson, ",inline = T, target = "_blank"),
-                               a(href="https://twitter.com/pbleic?s=20","Paul Bleicher, ",inline = T, target = "_blank"),
-                               a(href="https://twitter.com/atulbutte?s=20","Atul Butte, ",inline = T, target = "_blank"),
-                               a(href="mailto:matthew.elliott@ucsf.edu","Matthew Elliott, ",inline = T, target = "_blank"),
-                               a(href="https://twitter.com/armanmosenia?s=20","Arman Mosenia, ",inline = T, target = "_blank"),
-                               a(href="mailto:boris.oskotsky@ucsf.edu","Boris Oskotsky, ",inline = T, target = "_blank"),
-                               a(href="https://twitter.com/vivicality?s=20","Vivek Rudrapatna, ",inline = T, target = "_blank"),
-                               a(href="https://twitter.com/vashishtrv?s=20","Rohit Vashisht, ",inline = T, target = "_blank"),
-                               a(href="mailto:travis.zack@ucsf.edu","Travis Zack",inline = T, target = "_blank")
-                  )),
+                  # Video Tutorial
+                  HTML( "<div class='col-xs-offset-1 col-xs-10 col-sm-offset-0 col-sm-6 col-md-6 col-lg-5'>
+                        <h3 class='text-center'>Tutorial</h3>
+                        <div class='embed-responsive embed-responsive-16by9'>
+                          <iframe class='embed-responsive-item'
+                          src='https://www.youtube.com/embed/5OHDSpLv1kY'></iframe></div>
+                        </div>"),
                   
-                  div( class="col-xs-12 col-sm-6 col-md-4 col-lg-3",
+                  div(  class='col-xs-12 col-sm-6 col-md-6',
+                        ### Data Sources
+                        h3( class="text-center", "Sources" ), # class="text-center",
+                        p(class="text-left",  "State and county infection data: ",
+                          a(href="https://github.com/nytimes/covid-19-data", "New York Times COVID-19",inline = T, target = "_blank"), "github."),
+                        p(class="text-left",  "US Census data: ",
+                          a(href="https://www.census.gov/developers/", "US Census API",inline = T, target = "_blank"),
+                          "and the",
+                          a(href="https://walkerke.github.io/tidycensus/", "tidycensus",inline = T, target = "_blank"),
+                          "R package."),
+                        #class="col-xs-12 col-sm-7 col-md-5",
+                        fluidRow( p(  style="padding-left:.8em;", strong("Team: "), # style="padding-left:0px",  margin-left:0px
+                                      a(href="mailto:douglas.arneson@ucsf.edu","Douglas Arneson, ",inline = T, target = "_blank"),
+                                      a(href="https://twitter.com/pbleic?s=20","Paul Bleicher, ",inline = T, target = "_blank"),
+                                      a(href="https://twitter.com/atulbutte?s=20","Atul Butte, ",inline = T, target = "_blank"),
+                                      a(href="mailto:matthew.elliott@ucsf.edu","Matthew Elliott, ",inline = T, target = "_blank"),
+                                      a(href="https://twitter.com/armanmosenia?s=20","Arman Mosenia, ",inline = T, target = "_blank"),
+                                      a(href="mailto:boris.oskotsky@ucsf.edu","Boris Oskotsky, ",inline = T, target = "_blank"),
+                                      a(href="https://twitter.com/vivicality?s=20","Vivek Rudrapatna, ",inline = T, target = "_blank"),
+                                      a(href="https://twitter.com/vashishtrv?s=20","Rohit Vashisht, ",inline = T, target = "_blank"),
+                                      a(href="mailto:travis.zack@ucsf.edu","Travis Zack",inline = T, target = "_blank")
+                        ))
+                  ),
+                  
+                  div( class="col-xs-12 col-sm-6 col-md-6 col-lg-5",
                        img(src='www/bakar_logo.png', class="img-responsive")
                   )
                 ),
                 
-                div(class="jumbotron", style="background-color: white", HTML("<h1>&nbsp</h1>") ),
+                fluidRow(class="jumbotron", style="background-color: white", HTML("<h1>&nbsp</h1>") ),
                 
                 ######################################################################
                 #  Leading Message
@@ -381,7 +409,7 @@ ui = fluidPage( style='margin-left:5px; margin-right:5px', title="COVID-19 Count
                                background-color: #FE672E; z-index: 105;  }
                   "),
                 conditionalPanel(condition="$('html').hasClass('shiny-busy')",
-                                 tags$div("Loading...",id="loadmessage")
+                                 tags$div("We'll be right with you",id="loadmessage")
                 )
 )
 
@@ -475,10 +503,12 @@ server = function(input, output, session) {
     dat <- countyDat
     
     # This filters by the minimum number of cases
+    # This code is ignored when the user looks at specific counties
+    max_cases = if( "All" %in% input$cCounty ) input$mCases else 0
     selected_counties <- countyDat %>%
       group_by(state, county) %>%
       summarise(max_cases_per_county = max(cases)) %>%
-      mutate(has_enough_cases = (max_cases_per_county > input$mCases)) %>%
+      mutate(has_enough_cases = (max_cases_per_county > max_cases)) %>%
       filter(has_enough_cases) %>%
       ungroup
     
@@ -670,7 +700,7 @@ server = function(input, output, session) {
           # xlim(min(dat$time),max(dat$time)+3) +
           geom_text(data = labelDat, aes(label = label), nudge_x = 0.15) +
           # geom_label_repel(aes(label = label), nudge_x = 1, na.rm = TRUE) + # this does not work in plotly
-          ggtitle(label = paste0(annoTitle," - ",scaleAnno), subtitle = paste0("minimum each county is ",input$mCases," cases")) +
+          #ggtitle(label = paste0(annoTitle," - ",scaleAnno), subtitle = paste0("minimum each county is ",input$mCases," cases")) +
           ylab(annoYlab) +
           xAxis + # x-axis labels (time format)
           plotScale + #y-axis scale
@@ -695,16 +725,17 @@ server = function(input, output, session) {
           annotate(geom="text", x = max(everyFourDays$time) + 0.15, y=max(everyFourDays$value), label="Doubling every 4 days", color="black")
       }
       
+      output$main_plot_title = renderText({  paste0(annoTitle," - ",scaleAnno) })
       ggplotly(p1, tooltip = "text") %>%
-        style(textposition = "right") %>%
-        layout(title = list(text = paste0(annoTitle," - ",scaleAnno,
-                                          '<br>',
-                                          '<sup>',
-                                          'View/hide a county by clicking it\'s name in the legend. Double-click to select only one county.',
-                                          '</sup>'))) #%>%
-        # partial_bundle(local = FALSE) %>%
-        # plotly_mod_dep() #%>%
-        # toWebGL()
+        style(textposition = "right") #%>%
+      #layout(title = list(text = paste0(annoTitle," - ",scaleAnno,
+      #                                  '<br>',
+      #                                  '<sup>',
+      #                                  'View/hide a county by clicking it\'s name in the legend. Double-click to select only one county.',
+      #                                  '</sup>'))) #%>%
+      #partial_bundle(local = FALSE) %>%
+      #plotly_mod_dep() #%>%
+      #toWebGL()
       
     } else{
       #Silence the aesthetics we use for plotly but not directly in ggplot
@@ -716,7 +747,7 @@ server = function(input, output, session) {
           # xlim(min(dat$time),max(dat$time)+3) +
           geom_text(data = labelDat, aes(label = label), nudge_x = 0.15) +
           # geom_label_repel(aes(label = label), nudge_x = 1, na.rm = TRUE) + # this does not work in plotly
-          ggtitle(label = paste0(annoTitle," - ",scaleAnno), subtitle = paste0("minimum each county is ",input$mCases," cases")) +
+          #ggtitle(label = paste0(annoTitle," - ",scaleAnno), subtitle = paste0("minimum each county is ",input$mCases," cases")) +
           xlab(paste0("Dates from: ",format(input$daterange1[1], "%m/%d")," - ",format(input$daterange1[2], "%m/%d"))) +
           ylab(annoYlab) +
           xAxis + # x-axis labels (time format)
@@ -738,19 +769,20 @@ server = function(input, output, session) {
           xlab("Days after the first 10 cases")
       }
       
+      output$main_plot_title = renderText({  paste0(annoTitle," - ",scaleAnno) })
       ggplotly(p1, tooltip = "text") %>%
-        style(textposition = "right") %>%
-        layout(title = list(text = paste0(annoTitle," - ",scaleAnno,
-                                          '<br>',
-                                          '<sup>',
-                                          'View/hide a county by clicking it\'s name in the legend. Double-click to select only one county.',
-                                          '</sup>'))) #%>%
-        # partial_bundle(local = FALSE) %>%
-        # plotly_mod_dep() #%>%
-        # toWebGL()
+        style(textposition = "right") #%>%
+      #layout(title = list(text = paste0(annoTitle," - ",scaleAnno,
+      #                                  '<br>',
+      #                                  '<sup>',
+      #                                  'View/hide a county by clicking it\'s name in the legend. Double-click to select only one county.',
+      #                                  '</sup>'))) #%>%
+      #partial_bundle(local = FALSE) %>%
+      #plotly_mod_dep() %>%
+      #toWebGL()
       
-      # toWebGL(p1)
-    
+      #toWebGL(p1)
+      
     }
     
   })
@@ -866,6 +898,8 @@ server = function(input, output, session) {
     
     stateSelect <- dat[which(dat$state_name == input$cState),]
     
+    
+    output$us_map_title = renderText({  annoTitle })
     # By date
     #Silence the aesthetics we use for plotly but not directly in ggplot
     suppressWarnings(
@@ -876,12 +910,12 @@ server = function(input, output, session) {
                                           text = paste0("State: ", str_to_title(state_name),
                                                         "</br></br>Cases (",format(input$daterange1[1], "%m/%d")," - ",format(input$daterange1[2], "%m/%d"),"): ", format(cases,big.mark=",",scientific=FALSE),
                                                         "</br>Deaths (",format(input$daterange1[1], "%m/%d")," - ",format(input$daterange1[2], "%m/%d"),"): ", format(deaths,big.mark=",",scientific=FALSE),
-                                                        "</br>Cases Per Million (",format(input$daterange1[1], "%m/%d")," - ",format(input$daterange1[2], "%m/%d"),"): ", format(round(casesPerMillion),big.mark=",",scientific=FALSE),
-                                                        "</br>Deaths Per Million (",format(input$daterange1[1], "%m/%d")," - ",format(input$daterange1[2], "%m/%d"),"): ", format(round(deathsPerMillion),big.mark=",",scientific=FALSE),
+                                                        "</br>Cases Per Million (",format(input$daterange1[1], "%m/%d")," - ",format(input$daterange1[2], "%m/%d"),"): ", format(round(casesPerMillion, digits = 1),big.mark=",",scientific=FALSE),
+                                                        "</br>Deaths Per Million (",format(input$daterange1[1], "%m/%d")," - ",format(input$daterange1[2], "%m/%d"),"): ", format(round(deathsPerMillion, digits = 1),big.mark=",",scientific=FALSE),
                                                         "</br>New Cases (",format(input$daterange1[2], "%m/%d"),"): ", format(NewCases,big.mark=",",scientific=FALSE),
                                                         "</br>New Deaths (",format(input$daterange1[2], "%m/%d"),"): ", format(NewDeaths,big.mark=",",scientific=FALSE),
-                                                        "</br>New Cases Per Million (",format(input$daterange1[2], "%m/%d"),"): ", format(NewCasesPerMillion,big.mark=",",scientific=FALSE),
-                                                        "</br>New Deaths Per Million (",format(input$daterange1[2], "%m/%d"),"): ", format(NewDeathsPerMillion,big.mark=",",scientific=FALSE)
+                                                        "</br>New Cases Per Million (",format(input$daterange1[2], "%m/%d"),"): ", format(round(NewCasesPerMillion, digits = 1),big.mark=",",scientific=FALSE),
+                                                        "</br>New Deaths Per Million (",format(input$daterange1[2], "%m/%d"),"): ", format(round(NewDeathsPerMillion, digits = 1),big.mark=",",scientific=FALSE)
                                           )),
                 color = "gray25", size = 0.5) +
         geom_sf(data = stateSelect, mapping = aes(fill = value, state = state_name, key = state_name, cases = cases, deaths = deaths, casesPerMillion = casesPerMillion, deathsPerMillion = deathsPerMillion, NewCases = NewCases, 
@@ -890,12 +924,12 @@ server = function(input, output, session) {
                                                   text = paste0("State: ", str_to_title(state_name), 
                                                                 "</br></br>Cases (",format(input$daterange1[1], "%m/%d")," - ",format(input$daterange1[2], "%m/%d"),"): ", format(cases,big.mark=",",scientific=FALSE),
                                                                 "</br>Deaths (",format(input$daterange1[1], "%m/%d")," - ",format(input$daterange1[2], "%m/%d"),"): ", format(deaths,big.mark=",",scientific=FALSE),
-                                                                "</br>Cases Per Million (",format(input$daterange1[1], "%m/%d")," - ",format(input$daterange1[2], "%m/%d"),"): ", format(round(casesPerMillion),big.mark=",",scientific=FALSE),
-                                                                "</br>Deaths Per Million (",format(input$daterange1[1], "%m/%d")," - ",format(input$daterange1[2], "%m/%d"),"): ", format(round(deathsPerMillion),big.mark=",",scientific=FALSE),
+                                                                "</br>Cases Per Million (",format(input$daterange1[1], "%m/%d")," - ",format(input$daterange1[2], "%m/%d"),"): ", format(round(casesPerMillion, digits = 1),big.mark=",",scientific=FALSE),
+                                                                "</br>Deaths Per Million (",format(input$daterange1[1], "%m/%d")," - ",format(input$daterange1[2], "%m/%d"),"): ", format(round(deathsPerMillion, digits = 1),big.mark=",",scientific=FALSE),
                                                                 "</br>New Cases (",format(input$daterange1[2], "%m/%d"),"): ", format(NewCases,big.mark=",",scientific=FALSE),
                                                                 "</br>New Deaths (",format(input$daterange1[2], "%m/%d"),"): ", format(NewDeaths,big.mark=",",scientific=FALSE),
-                                                                "</br>New Cases Per Million (",format(input$daterange1[2], "%m/%d"),"): ", format(NewCasesPerMillion,big.mark=",",scientific=FALSE),
-                                                                "</br>New Deaths Per Million (",format(input$daterange1[2], "%m/%d"),"): ", format(NewDeathsPerMillion,big.mark=",",scientific=FALSE)
+                                                                "</br>New Cases Per Million (",format(input$daterange1[2], "%m/%d"),"): ", format(round(NewCasesPerMillion, digits = 1),big.mark=",",scientific=FALSE),
+                                                                "</br>New Deaths Per Million (",format(input$daterange1[2], "%m/%d"),"): ", format(round(NewDeathsPerMillion, digits = 1),big.mark=",",scientific=FALSE)
                                                   )),
                 color = "cyan", size = 1) +
         theme_bw() +
@@ -904,7 +938,7 @@ server = function(input, output, session) {
         scale_fill_gradient2(midpoint = median(dat$value), low = "white", mid = "#ffbe87", high = "#e6550d", na.value="gray75",
                              labels=function(n){paste0((n*100),"th")}) +
         labs( fill = "Percentile Rank" ) + #edit the legend title
-        ggtitle(annoTitle) +
+        #ggtitle(annoTitle) +
         theme(
           axis.text = element_blank(),
           axis.line = element_blank(),
@@ -916,9 +950,9 @@ server = function(input, output, session) {
         )
     )
     ggplotly(p2, tooltip = "text", source = "usaPlot") %>% style(hoveron = "key") %>% event_register("plotly_click") #%>%
-      # partial_bundle(local = FALSE) %>%
-      # plotly_mod_dep() #%>%
-      # toWebGL()
+    #partial_bundle(local = FALSE) %>%
+    #plotly_mod_dep() %>%
+    #toWebGL()
     # toWebGL(p2)
     
   })
@@ -944,42 +978,42 @@ server = function(input, output, session) {
     if(input$uPlot == "cases" & input$uScale == "true"){
       dat <- dat %>%
         mutate(value = casesPerMillion)
-      annoTitle = paste0("Cumulative Cases Per Million in Each ",input$cState," County from: ",format(input$daterange1[1], "%m/%d")," - ",format(input$daterange1[2], "%m/%d"), "\n (percentile ranks are relative to counties within the state)")
+      annoTitle = paste0("Cumulative Cases Per Million in Each ",input$cState," County from: ",format(input$daterange1[1], "%m/%d")," - ",format(input$daterange1[2], "%m/%d") )
     }
     if(input$uPlot == "cases" & input$uScale == "false"){
       dat <- dat %>%
         mutate(value = cases)
-      annoTitle = paste0("Cumulative Cases in Each ",input$cState," County from: ",format(input$daterange1[1], "%m/%d")," - ",format(input$daterange1[2], "%m/%d"), "\n (percentile ranks are relative to counties within the state)")
+      annoTitle = paste0("Cumulative Cases in Each ",input$cState," County from: ",format(input$daterange1[1], "%m/%d")," - ",format(input$daterange1[2], "%m/%d") )
     }
     if(input$uPlot == "nCases" & input$uScale == "true"){
       dat <- dat %>%
         mutate(value = NewCasesPerMillion)
-      annoTitle = paste0("New Cases Per Million in Each ",input$cState," County on: ",format(input$daterange1[2], "%m/%d"), "\n (percentile ranks are relative to counties within the state)")
+      annoTitle = paste0("New Cases Per Million in Each ",input$cState," County on: ",format(input$daterange1[2], "%m/%d") )
     }
     if(input$uPlot == "nCases" & input$uScale == "false"){
       dat <- dat %>%
         mutate(value = NewCases)
-      annoTitle = paste0("New Cases in Each ",input$cState," County on: ",format(input$daterange1[2], "%m/%d"), "\n (percentile ranks are relative to counties within the state)")
+      annoTitle = paste0("New Cases in Each ",input$cState," County on: ",format(input$daterange1[2], "%m/%d") )
     }
     if(input$uPlot == "deaths" & input$uScale == "true"){
       dat <- dat %>%
         mutate(value = deathsPerMillion)
-      annoTitle = paste0("Cumulative Deaths Per Million in Each ",input$cState," County from: ",format(input$daterange1[1], "%m/%d")," - ",format(input$daterange1[2], "%m/%d"), "\n (percentile ranks are relative to counties within the state)")
+      annoTitle = paste0("Cumulative Deaths Per Million in Each ",input$cState," County from: ",format(input$daterange1[1], "%m/%d")," - ",format(input$daterange1[2], "%m/%d") )
     }
     if(input$uPlot == "deaths" & input$uScale == "false"){
       dat <- dat %>%
         mutate(value = deaths)
-      annoTitle = paste0("Cumulative Deaths in Each ",input$cState," County from: ",format(input$daterange1[1], "%m/%d")," - ",format(input$daterange1[2], "%m/%d"), "\n (percentile ranks are relative to counties within the state)")
+      annoTitle = paste0("Cumulative Deaths in Each ",input$cState," County from: ",format(input$daterange1[1], "%m/%d")," - ",format(input$daterange1[2], "%m/%d") )
     }
     if(input$uPlot == "nDeaths" & input$uScale == "true"){
       dat <- dat %>%
         mutate(value = NewDeathsPerMillion)
-      annoTitle = paste0("New Deaths Per Million in Each ",input$cState," County on: ",format(input$daterange1[2], "%m/%d"), "\n (percentile ranks are relative to counties within the state)")
+      annoTitle = paste0("New Deaths Per Million in Each ",input$cState," County on: ",format(input$daterange1[2], "%m/%d") )
     }
     if(input$uPlot == "nDeaths" & input$uScale == "false"){
       dat <- dat %>%
         mutate(value = NewDeaths)
-      annoTitle = paste0("New Deaths in Each ",input$cState," County on: ",format(input$daterange1[2], "%m/%d"), "\n (percentile ranks are relative to counties within the state)")
+      annoTitle = paste0("New Deaths in Each ",input$cState," County on: ",format(input$daterange1[2], "%m/%d") )
     }
     
     counties_sf <- get_urbn_map("counties", sf = TRUE)
@@ -1049,7 +1083,7 @@ server = function(input, output, session) {
     
     # Can't do projection for alaska or hawaii
     if(!stateUse %in% c("Alaska","Hawaii")){
-    
+      
       # Project the state map
       statesLimits <- map_data("state")
       statesLimits = statesLimits[which(statesLimits$region == tolower(stateUse)),]
@@ -1062,6 +1096,8 @@ server = function(input, output, session) {
     
     #use previous maps package
     
+    # Create graph Title
+    output$state_map_title = renderText({  annoTitle })
     # By date
     #Silence the aesthetics we use for plotly but not directly in ggplot
     suppressWarnings(
@@ -1069,8 +1105,8 @@ server = function(input, output, session) {
         geom_sf(data = stateSubset, aes(fill = value, State = State, County = County, cases = cases, deaths = deaths, casesPerMillion = casesPerMillion, deathsPerMillion = deathsPerMillion,
                                         text = paste0("State: ", str_to_title(State), "</br></br>County: ", str_to_title(County),
                                                       "</br>Cases: ", format(cases,big.mark=",",scientific=FALSE),
-                                                      "</br>Deaths: ", format(deaths,big.mark=",",scientific=FALSE), "</br>Cases Per Million: ", format(round(casesPerMillion),big.mark=",",scientific=FALSE),
-                                                      "</br>Deaths Per Million: ", format(round(deathsPerMillion),big.mark=",",scientific=FALSE))),
+                                                      "</br>Deaths: ", format(deaths,big.mark=",",scientific=FALSE), "</br>Cases Per Million: ", format(round(casesPerMillion, digits = 1),big.mark=",",scientific=FALSE),
+                                                      "</br>Deaths Per Million: ", format(round(deathsPerMillion, digits = 1),big.mark=",",scientific=FALSE))),
                 color = "gray50", size = 0.5) +
         geom_sf(data = stateSubset, aes(color = as.numeric(county_fips), State = State, County = County, cases = cases, deaths = deaths, casesPerMillion = casesPerMillion, deathsPerMillion = deathsPerMillion,
                                         NewCasesPerMillion = NewCasesPerMillion,  NewCases =  NewCases, NewDeathsPerMillion = NewDeathsPerMillion,  NewDeaths =  NewDeaths,
@@ -1078,19 +1114,19 @@ server = function(input, output, session) {
                                         text = paste0("State: ", str_to_title(State), "</br></br>County: ", str_to_title(County), 
                                                       "</br>Cases (",format(input$daterange1[1], "%m/%d")," - ",format(input$daterange1[2], "%m/%d"),"): ", format(cases,big.mark=",",scientific=FALSE),
                                                       "</br>Deaths (",format(input$daterange1[1], "%m/%d")," - ",format(input$daterange1[2], "%m/%d"),"): ", format(deaths,big.mark=",",scientific=FALSE),
-                                                      "</br>Cases Per Million (",format(input$daterange1[1], "%m/%d")," - ",format(input$daterange1[2], "%m/%d"),"): ", format(round(casesPerMillion),big.mark=",",scientific=FALSE),
-                                                      "</br>Deaths Per Million (",format(input$daterange1[1], "%m/%d")," - ",format(input$daterange1[2], "%m/%d"),"): ", format(round(deathsPerMillion),big.mark=",",scientific=FALSE),
+                                                      "</br>Cases Per Million (",format(input$daterange1[1], "%m/%d")," - ",format(input$daterange1[2], "%m/%d"),"): ", format(round(casesPerMillion, digits = 1),big.mark=",",scientific=FALSE),
+                                                      "</br>Deaths Per Million (",format(input$daterange1[1], "%m/%d")," - ",format(input$daterange1[2], "%m/%d"),"): ", format(round(deathsPerMillion, digits = 1),big.mark=",",scientific=FALSE),
                                                       "</br>New Cases (",format(input$daterange1[2], "%m/%d"),"): ", format(NewCases,big.mark=",",scientific=FALSE),
                                                       "</br>New Deaths (",format(input$daterange1[2], "%m/%d"),"): ", format(NewDeaths,big.mark=",",scientific=FALSE),
-                                                      "</br>New Cases Per Million (",format(input$daterange1[2], "%m/%d"),"): ", format(NewCasesPerMillion,big.mark=",",scientific=FALSE),
-                                                      "</br>New Deaths Per Million (",format(input$daterange1[2], "%m/%d"),"): ", format(NewDeathsPerMillion,big.mark=",",scientific=FALSE)
+                                                      "</br>New Cases Per Million (",format(input$daterange1[2], "%m/%d"),"): ", format(round(NewCasesPerMillion, digits = 1), big.mark=",",scientific=FALSE),
+                                                      "</br>New Deaths Per Million (",format(input$daterange1[2], "%m/%d"),"): ", format(round(NewDeathsPerMillion, digits = 1), big.mark=",",scientific=FALSE)
                                         )),
                 size = 0.01,alpha = 1,fill=NA) +
         theme_bw() +
         # scale_fill_gradient2(midpoint = median(stateSubset$value[!is.na(stateSubset$value)]), low = "#0571b0", mid = "#f7f7f7", high = "#ca0020", na.value="gray75") +
         scale_fill_gradient2(midpoint = median(stateSubset$value[!is.na(stateSubset$value)]), low = "white", mid = "#ffbe87", high = "#e6550d", na.value="gray75") +
         labs( fill = "Percentile" ) + #edit the legend title
-        ggtitle(annoTitle) +
+        #ggtitle(annoTitle) +
         theme(
           axis.text = element_blank(),
           axis.line = element_blank(),
@@ -1102,9 +1138,9 @@ server = function(input, output, session) {
           legend.position = "none") #remove the legend
     )
     ggplotly(p3, tooltip = "text") %>% style(hoveron = "key") #%>%
-      # partial_bundle(local = FALSE) %>%
-      # plotly_mod_dep() #%>%
-      # toWebGL()
+    #partial_bundle(local = FALSE) %>%
+    #plotly_mod_dep() %>%
+    #toWebGL()
     # toWebGL(p3)
     
   })
