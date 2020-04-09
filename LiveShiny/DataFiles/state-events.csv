@@ -1,0 +1,189 @@
+State,State_Name,Date,Event
+CT,Connecticut,2020-03-10,SE
+CT,Connecticut,2020-03-23,CS
+CT,Connecticut,2020-03-20,SIP
+CT,Connecticut,2020-03-16,RB
+ME,Maine,2020-03-15,SE
+ME,Maine,2020-04-02,SIP
+MA,Massachusetts,2020-03-10,SE
+MA,Massachusetts,2020-03-17,RB
+MA,Massachusetts,2020-03-17,CS
+MA,Massachusetts,2020-03-24,SIP
+NH,New Hampshire,2020-03-27,RB
+NH,New Hampshire,2020-03-15,CS
+NH,New Hampshire,2020-03-27,SIP
+NH,New Hampshire,2020-03-13,SE
+RI,Rhode Island,2020-03-09,SE
+RI,Rhode Island,2020-03-16,CS
+RI,Rhode Island,2020-03-28,SIP
+RI,Rhode Island,2020-03-16,RB
+VT,Vermont,2020-03-18,CS
+VT,Vermont,2020-03-13,SE
+VT,Vermont,2020-03-24,SIP
+VT,Vermont,2020-03-17,RB
+NJ,New Jersey,2020-03-09,SE
+NJ,New Jersey,2020-03-16,CS
+NJ,New Jersey,2020-03-21,SIP
+NJ,New Jersey,2020-03-16,RB
+NY,New York,2020-03-22,SIP
+NY,New York,2020-03-16,RB
+NY,New York,2020-03-17,SE
+NY,New York,2020-03-18,CS
+PA,Pennsylvania,2020-03-06,SE
+PA,Pennsylvania,2020-03-16,RB
+PA,Pennsylvania,2020-04-01,SIP
+PA,Pennsylvania,2020-03-16,CS
+DE,Delaware,2020-03-24,SIP
+DE,Delaware,2020-03-13,CS
+DE,Delaware,2020-03-16,RB
+DE,Delaware,2020-03-12,SE
+FL,Florida,2020-03-11,SE
+FL,Florida,2020-03-16,CS
+FL,Florida,2020-03-18,RB
+FL,Florida,2020-04-03,SIP
+GA,Georgia,2020-03-18,CS
+GA,Georgia,2020-04-03,SIP
+GA,Georgia,2020-03-14,SE
+MD,Maryland,2020-03-23,RB
+MD,Maryland,2020-03-16,CS
+MD,Maryland,2020-03-30,SIP
+MD,Maryland,2020-03-05,SE
+NC,North Carolina,2020-03-30,SIP
+NC,North Carolina,2020-03-10,SE
+NC,North Carolina,2020-03-17,RB
+NC,North Carolina,2020-03-16,CS
+SC,South Carolina,2020-03-16,CS
+SC,South Carolina,2020-03-18,RB
+SC,South Carolina,2020-03-13,SE
+VA,Virginia,2020-03-12,SE
+VA,Virginia,2020-03-13,CS
+VA,Virginia,2020-03-30,SIP 
+DC,District of Columbia,2020-03-16,CS
+DC,District of Columbia,2020-03-16,RB
+DC,District of Columbia,2020-03-11,SE
+DC,District of Columbia,2020-04-01,SIP
+WV,West Virginia,2020-03-24,SIP
+WV,West Virginia,2020-03-16,SE
+WV,West Virginia,2020-03-18,RB
+WV,West Virginia,2020-03-13,CS
+IL,Illinois,2020-03-21,SD
+IL,Illinois,2020-03-21,SIP
+IL,Illinois,2020-03-17,RB
+IL,Illinois,2020-03-17,CS
+IN,Indiana,2020-03-19,CS
+IN,Indiana,2020-03-17,SD
+IN,Indiana,2020-03-17,RB
+IN,Indiana,2020-03-24,SIP
+OH,Ohio,2020-03-12,SD
+OH,Ohio,2020-03-12,CS
+OH,Ohio,2020-03-15,RB
+OH,Ohio,2020-03-23,SIP
+WI,Wisconsin,2020-03-18,SD
+WI,Wisconsin,2020-03-18,CS
+WI,Wisconsin,2020-03-18,RB
+WI,Wisconsin,2020-03-25,SIP
+IA,Iowa,2020-03-15,CS
+IA,Iowa,2020-03-17,RB
+KS,Kansas,2020-03-30,SIP
+KS,Kansas,2020-03-16,SD
+KS,Kansas,2020-03-18,CS
+MN,Minnesota,2020-03-17,RB
+MN,Minnesota,2020-03-18,CS
+MN,Minnesota,2020-03-13,SE
+MN,Minnesota,2020-03-27,SIP
+MO,Missouri,2020-03-19,CS
+MO,Missouri,2020-04-06,SIP
+MO,Missouri,2020-03-21,SD
+NE,Nebraska,2020-03-13,SE
+NE,Nebraska,2020-03-16,CS
+ND,North Dakota,2020-03-20,RB
+ND,North Dakota,2020-03-16,CS
+SD,South Dakota,2020-03-19,SD
+SD,South Dakota,2020-03-13,SE
+SD,South Dakota,2020-03-16,CS
+AL,Alabama,2020-03-19,CS
+AL,Alabama,2020-03-28,SD
+AL,Alabama,2020-03-28,RB
+AL,Alabama,2020-03-13,SE
+KY,Kentucky,2020-03-25,SIP
+KY,Kentucky,2020-03-12,CS
+KY,Kentucky,2020-03-16,RB
+MS,Mississippi,2020-03-19,CS
+MS,Mississippi,2020-03-24,SD
+MS,Mississippi,2020-03-14,SE
+MS,Mississippi,2020-04-03,SIP
+MS,Mississippi,2020-03-24,RB
+TN,Tennessee,2020-03-23,RB
+TN,Tennessee,2020-04-01,SIP
+TN,Tennessee,2020-03-12,SE
+TN,Tennessee,2020-03-16,CS
+AZ,Arizona,2020-03-20,RB
+AZ,Arizona,2020-03-15,CS
+AZ,Arizona,2020-03-19,SD
+AZ,Arizona,2020-03-11,SIP
+CO,Colorado,2020-03-10,SE
+CO,Colorado,2020-03-26,SIP
+CO,Colorado,2020-03-23,CS
+CO,Colorado,2020-03-17,RB
+ID,Idaho,2020-03-13,SE
+ID,Idaho,2020-03-25,SIP
+ID,Idaho,2020-03-16,CS
+ID,Idaho,2020-03-25,RB
+MT,Montana,2020-03-12,SE
+MT,Montana,2020-03-28,SIP
+MT,Montana,2020-03-16,CS
+MT,Montana,2020-3-28,RB
+NV,Nevada,2020-03-12,SE
+NV,Nevada,2020-03-24,SIP
+NV,Nevada,2020-03-15,CS
+NV,Nevada,2020-03-20,RB
+NM,New Mexico,2020-03-11,SE
+NM,New Mexico,2020-03-24,SIP
+NM,New Mexico,2020-03-16,CS
+NM,New Mexico,2020-03-24,RB
+UT,Utah,2020-03-06,SE
+UT,Utah,3/30/20,SIP
+UT,Utah,2020-03-16,CS
+UT,Utah,2020-03-19,RB
+WY,Wyoming,2020-03-13,SE
+WY,Wyoming,2020-03-16,CS
+WY,Wyoming,2020-03-20,RB
+AK,Alaska,2020-03-11,SE
+AK,Alaska,2020-03-28,SIP
+AK,Alaska,2020-03-16,CS
+AK,Alaska,2020-03-18,RB
+CA,California,2020-03-16,RB
+CA,California,2020-03-04,SE
+CA,California,2020-03-16,CS
+CA,California,2020-3-19,SIP
+HI,Hawaii,2020-03-05,SE
+HI,Hawaii,2020-03-25,SIP
+HI,Hawaii,2020-03-16,CS
+HI,Hawaii,2020-03-20,RB
+OR,Oregon,2020-03-08,SE
+OR,Oregon,2020-03-16,CS
+OR,Oregon,2020-03-23,SIP
+OR,Oregon,2020-03-17,RB
+WA,Washington,2020-02-29,SE
+WA,Washington,2020-03-23,SIP
+WA,Washington,2020-03-17,CS
+WA,Washington,2020-03-16,RB
+AR,Arkansas,2020-03-11,SE
+AR,Arkansas,2020-03-17,CS
+AR,Arkansas,2020-03-20,RB
+LA,Louisiana,2020-03-11,SE
+LA,Louisiana,2020-03-16,CS
+LA,Louisiana,2020-03-23,SIP
+LA,Louisiana,2020-03-16,RB
+OK,Oaklahoma,2020-03-16,SE
+OK,Oaklahoma,2020-03-17,CS
+OK,Oaklahoma,2020-03-28,SIP
+OK,Oaklahoma,2020-03-24,RB
+TX,Texas,2020-03-13,SE
+TX,Texas,2020-03-23,CS
+TX,Texas,2020-4-2,SIP
+TX,Texas,2020-03-19,RB
+MI,Michigan,2020-03-10,SE
+MI,Michigan,2020-03-16,CS
+MI,Michigan,2020-03-24,SIP
+MI,Michigan,2020-03-16,RB
