@@ -2,6 +2,8 @@
 
 This tutorial is for volunteers interested in [Covid Counties](www.covidcounties.org) project. We explain how to run the website locally so that you can make changes to it. By far the easiest way to instantly start working on this project is to download it using [Docker](https://www.docker.com/why-docker). Docker has quickly become one of the most popular ways to share code, because it makes it easy to run any code on any computer instantly! 
 
+ps: check out our [dockerhub page!](https://hub.docker.com/r/pupster90/covid_tracker)
+
 ### Step 1: Install Docker
 
 You can quickly run our covid counties code on any Linux/Mac/Windows laptop using docker. You can [install docker here](https://www.docker.com/get-started). I also recommend watching a docker tutorial and installation video on [youtube](https://www.youtube.com/results?search_query=docker+tutorial).
