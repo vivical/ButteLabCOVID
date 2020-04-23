@@ -24,8 +24,31 @@ library(USAboundaries) # to get state boundaries
 # Load Elliott Libraries
 library(plotly)
 library(ggplot2)
-load(file = "./DataFiles/CovidCountiesWorkspace.RData")
+load(file = "/home/oskotsky/PycharmProjects/covidcounties/DataFiles/CovidCountiesWorkspace.RData")
 addResourcePath("www", paste(getwd() , "/www", sep="") )
+
+# timeout 
+timeoutSeconds <- 600
+
+inactivity <- sprintf("function idleTimer() {
+var t = setTimeout(logout, %s);
+window.onmousemove = resetTimer; // catches mouse movements
+window.onmousedown = resetTimer; // catches mouse movements
+window.onclick = resetTimer;     // catches mouse clicks
+window.onscroll = resetTimer;    // catches scrolling
+window.onkeypress = resetTimer;  //catches keyboard actions
+
+function logout() {
+Shiny.setInputValue('timeOut', '%ss')
+}
+
+function resetTimer() {
+clearTimeout(t);
+t = setTimeout(logout, %s);  // time is in milliseconds (1000 is 1 second)
+}
+}
+idleTimer();", timeoutSeconds*1000, timeoutSeconds, timeoutSeconds*1000)
+
 
 ######################################################################
 #  UI 
@@ -41,6 +64,7 @@ addResourcePath("www", paste(getwd() , "/www", sep="") )
 
 ui = fluidPage( style='margin-left:5px; margin-right:5px', title="COVID-19 County Tracker",
                 
+                tags$script(inactivity), 
                 tags$head(includeHTML("www/google_analytics.html")), # Add google analytics for tracking site
                 tags$head(tags$link(rel="shortcut icon", href="www/virus2_icon.svg")),  # Icon to display in browser tab
                 
@@ -335,7 +359,29 @@ ui = fluidPage( style='margin-left:5px; margin-right:5px', title="COVID-19 Count
 ######################################################################
 ######################################################################
 
+### Timeout
+
 server = function(input, output, session) {
+  
+  observeEvent(input$timeOut, { 
+    print(paste0("Session (", session$token, ") timed out at: ", Sys.time()))
+    showModal(modalDialog(
+      title = "Timeout",
+      paste("Session timeout due to", input$timeOut, "inactivity -", Sys.time()),
+      footer = NULL
+    ))
+    session$close()
+  })
+  
+  #points <- eventReactive(input$recalc, {
+  #  cbind(rnorm(40) * 2 + 13, rnorm(40) + 48)
+  #}, ignoreNULL = FALSE)
+  
+  #output$mymap <- renderLeaflet({
+  #  leaflet() %>%
+  #    addProviderTiles(providers$Stamen.TonerLite, options = providerTileOptions(noWrap = TRUE)) %>% 
+  #    addMarkers(data = points())
+  #})
   
   #######################################################################
   #  Use plotly click events on the US Map to change the selected state
@@ -932,7 +978,7 @@ server = function(input, output, session) {
       }
       # dat$colorMap <- colorRampPalette(colors = c("#e6550d", "#ffbe87", "#ffffff"))(99)[colorCuts]
     } else{
-    
+      
       # add N/A color to the colormap
       naIx <- which(is.na(dat$colorMap))
       if(length(naIx) > 0){
@@ -1187,7 +1233,7 @@ server = function(input, output, session) {
     # print(input$uScale)
     # print(input$pScale)
     # print(input$uTime)
-
+    
     # trigger changes here:
     # input$cState; plotVars(); filterLogZeros()
     #; scaleTitles(); filterLogZeros(); doublingLines()
@@ -1729,4 +1775,3 @@ server = function(input, output, session) {
 
 enableBookmarking("url")
 shinyApp(ui = ui, server = server)
- 
