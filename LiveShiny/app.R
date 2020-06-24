@@ -24,7 +24,8 @@ library(USAboundaries) # to get state boundaries
 # Load Elliott Libraries
 library(plotly)
 library(ggplot2)
-load(file = "/home/oskotsky/PycharmProjects/covidcounties/DataFiles/CovidCountiesWorkspace.RData")
+load(file = "./DataFiles/CovidCountiesWorkspace.RData")
+# load(file = "/home/oskotsky/PycharmProjects/covidcounties/DataFiles/CovidCountiesWorkspace.RData")
 addResourcePath("www", paste(getwd() , "/www", sep="") )
 
 # timeout 
@@ -48,7 +49,6 @@ t = setTimeout(logout, %s);  // time is in milliseconds (1000 is 1 second)
 }
 }
 idleTimer();", timeoutSeconds*1000, timeoutSeconds, timeoutSeconds*1000)
-
 
 ######################################################################
 #  UI 
@@ -134,7 +134,7 @@ ui = fluidPage( style='margin-left:5px; margin-right:5px', title="COVID-19 Count
                                                                                      "New cases" = "nCases",
                                                                                      "New deaths" = "nDeaths",
                                                                                      "Doubling time"='loessN',
-                                                                                     "Estimated ICU bed utilization"='ICUbeds'))),#4-7-2020 #TRAVIS ZACK added this for doubling option
+                                                                                     "Estimated ICU beds needed"='ICUbeds'))),#4-7-2020 #TRAVIS ZACK added this for doubling option
                             div( class="col-sm-3 col-xs-6", radioButtons("uTime", "Time Scale",
                                                                          selected = "absoluteT", # default value
                                                                          choices = c("Aligned (since first 10 cases)" = "realtiveT",
@@ -149,20 +149,45 @@ ui = fluidPage( style='margin-left:5px; margin-right:5px', title="COVID-19 Count
                                                                                      "Log" = "log")))
                           ),
                           fluidRow(
-                            column( 6,  
+                            column( 4,  
                                     numericInput("mCases", "Include counties with more cases than:", 
                                                  value = 25,# default value
                                                  min = 0, 
                                                  max = max(countyDat$cases))#,
                                     # p("View/hide a county by clicking its name. Double-click to select only one county.", style="padding-top:0; margin-top:0"),
                             ),
-                            column(6,
-                                   dateRangeInput("daterange1", "Date Range (some data streams begin as early as 1/21/2020):", # (includes data from 1/1/20-Present)
+                            column( 4,  
+                                    radioButtons("dArrows", "Show State Mandates:",
+                                                 selected = "false", # default value
+                                                 choices = c("True" = "true",
+                                                             "False" = "false"))
+                            ),
+                            column(4,
+                                   # 6-23-2020
+                                   shinyalert::useShinyalert(),
+                                   dateRangeInput("daterange1", paste0("Date Range (data is available from: 2020-01-21 to ",as.Date((max(countyDat$date) - 1)),"):"), # (includes data from 1/1/20-Present)
                                                   start  = as.Date("2020-03-01"), # default value
-                                                  end    = max(countyDat$date),
-                                                  min    = min(countyDat$date),
-                                                  max    = max(countyDat$date),
-                                                  format = "mm/dd/yy",
+                                                  # start  = base::as.Date("2020-03-01", format='%Y-%m-%d'), #6-19-2020 v1
+                                                  # start  = as.POSIXlt("2020-03-01", tz = 'America/Los_Angeles'), #6-19-2020 v2
+                                                  # start  = base::as.Date("2020-03-01"), #6-19-2020 v3
+                                                  # end    = max(countyDat$date),  # default value
+                                                  end    = (max(countyDat$date) - 1),  #6-22-2020 v1  -- need to set the start to less than max value for EU
+                                                  # end    = (max(countyDat$date) - 2),  #6-22-2020 v2  -- need to set the start to less than max value for EU
+                                                  # end    = max(base::as.Date(countyDat$date,format='%Y-%m-%d')), #6-19-2020 v1
+                                                  # end    = max(as.POSIXlt(as.character(pull(countyDat[,"date"])), tz = 'America/Los_Angeles')), #6-19-2020 v2
+                                                  # end  = base::as.Date(maxDate), #6-19-2020 v3
+                                                  min    = min(countyDat$date),  # default value
+                                                  # min    = min(base::as.Date(countyDat$date,format='%Y-%m-%d')), #6-19-2020 v1
+                                                  # min    = min(as.POSIXlt(as.character(pull(countyDat[,"date"])), tz = 'America/Los_Angeles')), #6-19-2020 v2
+                                                  # min  = base::as.Date(minDate), #6-19-2020 v3
+                                                  # max    = max(countyDat$date),  # default value
+                                                  max    = max(countyDat$date),  # 6-22-2020 v1
+                                                  # max    = (max(countyDat$date) - 1),  # 6-22-2020 v2
+                                                  # max    = max(base::as.Date(countyDat$date,format='%Y-%m-%d')), #6-19-2020 v1
+                                                  # max    = max(as.POSIXlt(as.character(pull(countyDat[,"date"])), tz = 'America/Los_Angeles')), #6-19-2020 v2
+                                                  # max  = base::as.Date(maxDate), #6-19-2020 v3
+                                                  # format = "mm/dd/yy",
+                                                  format = "yyyy-mm-dd",
                                                   separator = " - ")
                             )
                           ),
@@ -297,7 +322,7 @@ ui = fluidPage( style='margin-left:5px; margin-right:5px', title="COVID-19 Count
                 
                 div(  class='col-xs-12 col-sm-6 col-md-6',
                       ### Data Sources
-                      h3( class="text-center", "Sources" ), # class="text-center",
+                      h3( class="text-center", "Acknowledgements" ), # class="text-center",
                       p(class="text-left",  "State and county infection data: ",
                         a(href="https://github.com/nytimes/covid-19-data", "New York Times COVID-19",inline = T, target = "_blank"), "github."),
                       p(class="text-left",  "US Census data: ",
@@ -314,6 +339,9 @@ ui = fluidPage( style='margin-left:5px; margin-right:5px', title="COVID-19 Count
                          a(href="https://www.tidyverse.org/", "tidyverse, ",inline = T, target = "_blank"),
                          a(href="https://plotly.com/r/", "plotly, ",inline = T, target = "_blank"), "& ",
                          a(href="https://walkerke.github.io/tidycensus/", "tidycensus",inline = T, target = "_blank")
+                      ),
+                      p( "Web hosting: Generously supported by ",
+                         a(href="https://aws.amazon.com/", "Amazon Web Services",inline = T, target = "_blank")
                       ),
                       
                       #class="col-xs-12 col-sm-7 col-md-5",
@@ -372,6 +400,29 @@ server = function(input, output, session) {
     ))
     session$close()
   })
+  
+  # Handle when max date value is selected: 6-23-2020
+  r <- reactiveValues(
+    start = as.Date("2020-03-01"),
+    end = (max(countyDat$date) - 1)
+  )
+  # Handle when max date value is selected: 6-23-2020
+  observeEvent( input$daterange1 , {
+    start <- input$daterange1[[1]]
+    end <- input$daterange1[[2]]
+    if (end == max(countyDat$date)){
+      shinyalert::shinyalert("end date selected is beyond available data", type = "error")
+      updateDateRangeInput(
+        session, 
+        "daterange1", 
+        start = r$start,
+        end = r$end
+      )
+    } else {
+      r$start <- input$daterange1[[1]]
+      r$end <- input$daterange1[[2]]
+    }
+  }, ignoreInit = TRUE)
   
   #points <- eventReactive(input$recalc, {
   #  cbind(rnorm(40) * 2 + 13, rnorm(40) + 48)
@@ -473,6 +524,11 @@ server = function(input, output, session) {
     # Pull in the county data
     req(countyDat)
     
+    # Handle when max date value is selected: 6-23-2020
+    validate(
+      need(input$daterange1[[2]] != max(countyDat$date), 'end date selected is beyond available data.')
+    )
+    
     # This filters by the minimum number of cases
     # This code is ignored when the user looks at specific counties
     max_cases = if( "All" %in% input$cCounty ) input$mCases else 0
@@ -573,12 +629,18 @@ server = function(input, output, session) {
   
   # Get the max (latest) time entry for each county
   maxTime <- reactive({
-    # Add a label for the max time for each county
-    max_date_label <- filterCounty() %>%
-      group_by(state, county) %>%
-      summarise(max_time = max(time, na.rm = T))
-    
-    filterCounty() %>% left_join(max_date_label, by = c("state", "county"))
+    #6-13-2020
+    if(nrow(filterCounty())>0){
+      # Add a label for the max time for each county
+      max_date_label <- filterCounty() %>%
+        group_by(state, county) %>%
+        summarise(max_time = max(time, na.rm = T))
+      
+      filterCounty() %>% left_join(max_date_label, by = c("state", "county"))
+      #6-13-2020
+    } else{
+      filterCounty()
+    }
   })
   
   # Get the variables that are actually being plotted
@@ -617,11 +679,11 @@ server = function(input, output, session) {
     }
     ##TRAVIS ZACK added for ICU time graph
     if(input$uPlot == "ICUbeds" & input$uScale == "false"){
-      plotVar = "perc_icu_occ"; valueLab = "Estimated Percent ICU Beds Occupied"; annoTitle = paste0("Estimated Percent ICU Beds Occupied in by ",input$cState," County"); yAxis <- list(title = "Estimated Percent ICU Beds Occupied")
+      plotVar = "perc_icu_occ"; valueLab = "Estimated Percent ICU Beds Needed"; annoTitle = paste0("Estimated Percent ICU Beds Needed by ",input$cState," County"); yAxis <- list(title = "Estimated Percent ICU Beds Needed")
     }
     ##TRAVIS ZACK added for ICU time graph
     if(input$uPlot == "ICUbeds" & input$uScale == "true"){
-      plotVar = "perc_icu_occ"; valueLab = "Estimated Percent ICU Beds Occupied"; annoTitle = paste0("Estimated Percent ICU Beds Occupied by ",input$cState," County"); yAxis <- list(title = "Estimated Percent ICU Beds Occupied")
+      plotVar = "perc_icu_occ"; valueLab = "Estimated Percent ICU Beds Needed"; annoTitle = paste0("Estimated Percent ICU Beds Needed by ",input$cState," County"); yAxis <- list(title = "Estimated Percent ICU Beds Needed")
     }
     
     # format the y-axis
@@ -656,10 +718,18 @@ server = function(input, output, session) {
         mutate(label = if_else(time == max_time, as.character(county), NA_character_))
     }
     if(input$uTime == "absoluteT"){
-      dat <- dat %>%
-        mutate(time = date) %>%
-        # Label only the latest point
-        mutate(label = if_else(date == max(date,na.rm = T), as.character(county), NA_character_))
+      #6-13-2020
+      if(nrow(dat)>0){
+        dat <- dat %>%
+          mutate(time = date) %>%
+          # Label only the latest point
+          mutate(label = if_else(date == max(date,na.rm = T), as.character(county), NA_character_))
+        #6-13-2020
+      } else{
+        dat <- dat %>%
+          mutate(time = date) %>%
+          mutate(label = "NA")
+      }
     }
     dat$label <- as.character(dat$label)
     dat
@@ -678,7 +748,10 @@ server = function(input, output, session) {
       xAxis[["xaxis.layer"]] = "below traces" #4-7-2020
     }
     xAxis[["autoscale"]] <- FALSE #4-7-2020
-    xAxis[["range"]] <- c(min(dat$time,na.rm = T), max(dat$time, na.rm = T) + (as.numeric(max(dat$time, na.rm = T)-min(dat$time,na.rm = T)))/4) #4-7-2-20
+    #6-13-2020
+    if(nrow(dat)>0){
+      xAxis[["range"]] <- c(min(dat$time,na.rm = T), max(dat$time, na.rm = T) + (as.numeric(max(dat$time, na.rm = T)-min(dat$time,na.rm = T)))/4) #4-7-2-20
+    }
     xAxis
   })
   
@@ -786,6 +859,7 @@ server = function(input, output, session) {
   filterUSdates <- reactive({
     # Pull in the state data
     req(stateDat)
+    
     # Get the appropriate date range
     dat1 <- subset(stateDat, as.character(date) == as.character(as.Date(input$daterange1[1])) )
     # Add exception if no state is selected
@@ -858,13 +932,13 @@ server = function(input, output, session) {
       }
       ##TRAVIS ZACK added for ICU time graph
       if(input$uPlot == "ICUbeds" & input$uScale == "false"){
-        plotVar = "perc_icu_occ"; annoTitle = paste0("Estimated Percent ICU Beds Occupied by State on: ",format(input$daterange1[2], "%m/%d"))
-        annoSubtitle = "(high fraction of estimated ICU beds utilized - orange; low fraction - white)" #4-7-2-20
+        plotVar = "perc_icu_occ"; annoTitle = paste0("Estimated Percent ICU Beds Needed by State on: ",format(input$daterange1[2], "%m/%d"))
+        annoSubtitle = "(high fraction of estimated ICU beds needed - orange; low fraction - white)" #4-7-2-20
       }
       ##TRAVIS ZACK added for ICU time graph
       if(input$uPlot == "ICUbeds" & input$uScale == "true" ){
-        plotVar = "perc_icu_occ"; annoTitle = paste0("Estimated Percent ICU Beds Occupied by State on: ",format(input$daterange1[2], "%m/%d"))
-        annoSubtitle = "(high fraction of estimated ICU beds utilized - orange; low fraction - white)" #4-7-2-20
+        plotVar = "perc_icu_occ"; annoTitle = paste0("Estimated Percent ICU Beds Needed by State on: ",format(input$daterange1[2], "%m/%d"))
+        annoSubtitle = "(high fraction of estimated ICU beds needed - orange; low fraction - white)" #4-7-2-20
       }
     }
     
@@ -956,7 +1030,11 @@ server = function(input, output, session) {
     if(length(dat$value) == 1){
       dat$colorMap = "#e6550d"
     } else{
-      colorCuts <- cut(dat$value, breaks = seq(min(dat$value,na.rm = T), max(dat$value,na.rm = T), len = 100), include.lowest = TRUE)
+      if(length(which(is.infinite(dat$value)))>0){  #6-13-2020
+        colorCuts <- cut(dat$value, breaks = seq(min(dat$value[-which(is.infinite(dat$value))],na.rm = T), max(dat$value[-which(is.infinite(dat$value))],na.rm = T), len = 100), include.lowest = TRUE) #6-13-2020
+      } else{
+        colorCuts <- cut(dat$value, breaks = seq(min(dat$value,na.rm = T), max(dat$value,na.rm = T), len = 100), include.lowest = TRUE) #6-13-2020
+      }
     }
     
     #4-7-2-20
@@ -998,6 +1076,7 @@ server = function(input, output, session) {
   
   # Get the variables that are actually being plotted
   plotVarsStateMap <- reactive({
+    
     if(input$uPlot == "cases" & input$uScale == "true"){
       plotVar = "casesPerMillion"
       annoTitle = paste0("Cumulative Cases Per Million by ",input$cState," County from: ",format(input$daterange1[1], "%m/%d")," - ",format(input$daterange1[2], "%m/%d") )
@@ -1043,12 +1122,12 @@ server = function(input, output, session) {
     ##TRAVIS ZACK added for ICU time graph
     if(input$uPlot == "ICUbeds" & input$uScale == "false"){
       plotVar = "perc_icu_occ"
-      annoTitle = paste0("Estimated Percent ICU Beds Occupied by ",input$cState," County: ",format(input$daterange1[2], "%m/%d") )
+      annoTitle = paste0("Estimated Percent ICU Beds Needed by ",input$cState," County: ",format(input$daterange1[2], "%m/%d") )
     }
     ##TRAVIS ZACK added for ICU time graph
     if(input$uPlot == "ICUbeds" & input$uScale == "true"){
       plotVar = "perc_icu_occ"
-      annoTitle = paste0("Estimated Percent ICU Beds Occupied by ",input$cState," County: ",format(input$daterange1[2], "%m/%d") )
+      annoTitle = paste0("Estimated Percent ICU Beds Needed by ",input$cState," County: ",format(input$daterange1[2], "%m/%d") )
     }
     
     # Return a list based on the selected parameters
@@ -1249,7 +1328,7 @@ server = function(input, output, session) {
     # Creat little message under graph that (usually) talks about doubling time
     output$doubling_time = renderText({ 
       if( input$uPlot == "ICUbeds" ){
-        paste("Estimations assume a 4.4% hospitalization rate, 30% ICU rate")
+        paste("Estimations assume a 12.7% hospitalization rate, 40% ICU rate")
       }else{
         paste('Fastest doubling time in state is ',fastest_dbl$county,': ',as.character(round(fastest_dbl$cur_double)), 'days')         
       }
@@ -1279,6 +1358,152 @@ server = function(input, output, session) {
                   )
     )
     
+    # SPEED THIS UP -- MAKE THIS A SINGLE SEGMENT FROM A SINGLE DATAFRAME (MAKE THIS NOT DEPEND ON THE PREVIOUS DATA) -- I THINK THIS IS SLOWING IT DOWN
+    
+    # Add in state policies
+    if(input$dArrows == "true"){
+      if(length(pull(filterLogZeros()[,plotVars()[["plotVar"]]])) > 0){
+        # If doubling time, need to flip the labels
+        if(input$uPlot == "loessN"){
+          minVal <- max(pull(filterLogZeros()[,plotVars()[["plotVar"]]]), na.rm = T)
+          maxVal <- min(pull(filterLogZeros()[,plotVars()[["plotVar"]]]), na.rm = T)
+          totVal <- maxVal - minVal
+        } else{
+          maxVal <- max(pull(filterLogZeros()[,plotVars()[["plotVar"]]]), na.rm = T)
+          minVal <- min(pull(filterLogZeros()[,plotVars()[["plotVar"]]]), na.rm = T)
+          totVal <- maxVal - minVal
+        }
+        
+        csDate <- unique(pull(stateDat[which(stateDat$state == input$cState),"CS"]))
+        rbDate <- unique(pull(stateDat[which(stateDat$state == input$cState),"RB"]))
+        seDate <- unique(pull(stateDat[which(stateDat$state == input$cState),"SE"]))
+        sipDate <- unique(pull(stateDat[which(stateDat$state == input$cState),"SIP"]))
+        
+        if(csDate == rbDate & !is.na(csDate) & !is.na(rbDate)){
+          p1 <- p1 %>%
+            add_segments(inherit = FALSE, x = csDate, xend = csDate,
+                         y = minVal, yend = maxVal, showlegend=FALSE, line=list(color = 'rgba(0,0,0,1)', dash = 'dash'), hoverinfo = 'text',
+                         hovertext = paste0('</br>State: ', input$cState,
+                                            "</br>School Closure: ",format(csDate, "%m/%d"),
+                                            "</br>Restuarant/Bar Closure: ",format(rbDate, "%m/%d"))) %>%
+            add_text(inherit = FALSE, x = csDate, y = maxVal, text = "CS,R/B", textposition = "top middle", showlegend=FALSE, hoverinfo = 'text',
+                     hovertext = paste0('</br>State: ', input$cState,
+                                        "</br>School Closure: ",format(csDate, "%m/%d"),
+                                        "</br>Restuarant/Bar Closure: ",format(rbDate, "%m/%d")))
+        } else{
+          if(csDate == seDate & !is.na(csDate) & !is.na(seDate)){
+            p1 <- p1 %>%
+              add_segments(inherit = FALSE, x = csDate, xend = csDate,
+                           y = minVal, yend = maxVal, showlegend=FALSE, line=list(color = 'rgba(0,0,0,1)', dash = 'dash'), hoverinfo = 'text',
+                           hovertext = paste0('</br>State: ', input$cState,
+                                              "</br>School Closure: ",format(csDate, "%m/%d"),
+                                              "</br>State of Emergency: ",format(seDate, "%m/%d"))) %>%
+              add_text(inherit = FALSE, x = csDate, y = maxVal, text = "CS,SoE", textposition = "top middle", showlegend=FALSE, hoverinfo = 'text',
+                       hovertext = paste0('</br>State: ', input$cState,
+                                          "</br>School Closure: ",format(csDate, "%m/%d"),
+                                          "</br>State of Emergency: ",format(seDate, "%m/%d")))
+          } else{
+            if(csDate == sipDate & !is.na(csDate) & !is.na(sipDate)){
+              p1 <- p1 %>%
+                add_segments(inherit = FALSE, x = csDate, xend = csDate,
+                             y = minVal, yend = maxVal, showlegend=FALSE, line=list(color = 'rgba(0,0,0,1)', dash = 'dash'), hoverinfo = 'text',
+                             hovertext = paste0('</br>State: ', input$cState,
+                                                "</br>School Closure: ",format(csDate, "%m/%d"),
+                                                "</br>Shelter in Place: ",format(sipDate, "%m/%d"))) %>%
+                add_text(inherit = FALSE, x = csDate, y = maxVal, text = "CS,SiP", textposition = "top middle", showlegend=FALSE, hoverinfo = 'text',
+                         hovertext = paste0('</br>State: ', input$cState,
+                                            "</br>School Closure: ",format(csDate, "%m/%d"),
+                                            "</br>Shelter in Place: ",format(sipDate, "%m/%d")))
+            } else{
+              if(!is.na(csDate)){
+                p1 <- p1 %>%
+                  add_segments(inherit = FALSE, x = csDate, xend = csDate,
+                               y = minVal, yend = maxVal, showlegend=FALSE, line=list(color = 'rgba(0,0,0,1)', dash = 'dash'), hoverinfo = 'text',
+                               hovertext = paste0('</br>State: ', input$cState,
+                                                  "</br>School Closure: ",format(csDate, "%m/%d"))) %>%
+                  add_text(inherit = FALSE, x = csDate, y = maxVal, text = "CS", textposition = "top middle", showlegend=FALSE, hoverinfo = 'text',
+                           hovertext = paste0('</br>State: ', input$cState,
+                                              "</br>School Closure: ",format(csDate, "%m/%d")))
+              }
+            }
+          }
+        }
+        
+        if(rbDate == seDate & !is.na(rbDate) & !is.na(seDate)){
+          p1 <- p1 %>%
+            add_segments(inherit = FALSE, x = rbDate, xend = rbDate,
+                         y = minVal, yend = maxVal, showlegend=FALSE, line=list(color = 'rgba(0,0,0,1)', dash = 'dash'), hoverinfo = 'text',
+                         hovertext = paste0('</br>State: ', input$cState,
+                                            "</br>Restuarant/Bar Closure: ",format(rbDate, "%m/%d"),
+                                            "</br>State of Emergency: ",format(seDate, "%m/%d"))) %>%
+            add_text(inherit = FALSE, x = rbDate, y = maxVal, text = "R/B,SoE", textposition = "top middle", showlegend=FALSE, hoverinfo = 'text',
+                     hovertext = paste0('</br>State: ', input$cState,
+                                        "</br>Restuarant/Bar Closure: ",format(rbDate, "%m/%d"),
+                                        "</br>State of Emergency: ",format(seDate, "%m/%d")))
+        } else{
+          if(rbDate == sipDate & !is.na(rbDate) & !is.na(sipDate)){
+            p1 <- p1 %>%
+              add_segments(inherit = FALSE, x = rbDate, xend = rbDate,
+                           y = minVal, yend = maxVal, showlegend=FALSE, line=list(color = 'rgba(0,0,0,1)', dash = 'dash'), hoverinfo = 'text',
+                           hovertext = paste0('</br>State: ', input$cState,
+                                              "</br>Restuarant/Bar Closure: ",format(rbDate, "%m/%d"),
+                                              "</br>Shelter in Place: ",format(sipDate, "%m/%d"))) %>%
+              add_text(inherit = FALSE, x = rbDate, y = maxVal, text = "R/B,SiP", textposition = "top middle", showlegend=FALSE, hoverinfo = 'text',
+                       hovertext = paste0('</br>State: ', input$cState,
+                                          "</br>Restuarant/Bar Closure: ",format(rbDate, "%m/%d"),
+                                          "</br>Shelter in Place: ",format(sipDate, "%m/%d")))
+          } else{
+            if(rbDate != csDate & !is.na(rbDate)){
+              p1 <- p1 %>%
+                add_segments(inherit = FALSE, x = rbDate, xend = rbDate,
+                             y = minVal, yend = maxVal, showlegend=FALSE, line=list(color = 'rgba(0,0,0,1)', dash = 'dash'), hoverinfo = 'text',
+                             hovertext = paste0('</br>State: ', input$cState,
+                                                "</br>Restuarant/Bar Closure: ",format(rbDate, "%m/%d"))) %>%
+                add_text(inherit = FALSE, x = rbDate, y = maxVal, text = "R/B", textposition = "top middle", showlegend=FALSE, hoverinfo = 'text',
+                         hovertext = paste0('</br>State: ', input$cState,
+                                            "</br>Restuarant/Bar Closure: ",format(rbDate, "%m/%d")))
+            }
+          }
+        } 
+        
+        if(seDate == sipDate  & !is.na(seDate) & !is.na(sipDate)){
+          p1 <- p1 %>%
+            add_segments(inherit = FALSE, x = seDate, xend = seDate,
+                         y = minVal, yend = maxVal, showlegend=FALSE, line=list(color = 'rgba(0,0,0,1)', dash = 'dash'), hoverinfo = 'text',
+                         hovertext = paste0('</br>State: ', input$cState,
+                                            "</br>State of Emergency: ",format(seDate, "%m/%d"),
+                                            "</br>Shelter in Place: ",format(sipDate, "%m/%d"))) %>%
+            add_text(inherit = FALSE, x = seDate, y = maxVal, text = "SoE,SiP", textposition = "top middle", showlegend=FALSE, hoverinfo = 'text',
+                     hovertext = paste0('</br>State: ', input$cState,
+                                        "</br>State of Emergency: ",format(seDate, "%m/%d"),
+                                        "</br>Shelter in Place: ",format(sipDate, "%m/%d")))
+        } else{
+          if(seDate != csDate & seDate != rbDate & !is.na(seDate)){
+            p1 <- p1 %>%
+              add_segments(inherit = FALSE, x = seDate, xend = seDate,
+                           y = minVal, yend = maxVal, showlegend=FALSE, line=list(color = 'rgba(0,0,0,1)', dash = 'dash'), hoverinfo = 'text',
+                           hovertext = paste0('</br>State: ', input$cState,
+                                              "</br>State of Emergency: ",format(seDate, "%m/%d"))) %>%
+              add_text(inherit = FALSE, x = seDate, y = maxVal, text = "SoE", textposition = "top middle", showlegend=FALSE, hoverinfo = 'text',
+                       hovertext = paste0('</br>State: ', input$cState,
+                                          "</br>State of Emergency: ",format(seDate, "%m/%d")))
+          }
+        }
+        
+        if(sipDate != csDate & sipDate != rbDate & sipDate != seDate & !is.na(sipDate)){
+          p1 <- p1 %>%
+            add_segments(inherit = FALSE, x = sipDate, xend = sipDate,
+                         y = minVal, yend = maxVal, showlegend=FALSE, line=list(color = 'rgba(0,0,0,1)', dash = 'dash'), hoverinfo = 'text',
+                         hovertext = paste0('</br>State: ', input$cState,
+                                            "</br>Shelter in Place: ",format(sipDate, "%m/%d"))) %>%
+            add_text(inherit = FALSE, x = unique(pull(stateDat[which(stateDat$state == input$cState),"SIP"])), y = maxVal, text = "SiP", textposition = "top middle", showlegend=FALSE, hoverinfo = 'text',
+                     hovertext = paste0('</br>State: ', input$cState,
+                                        "</br>Shelter in Place: ",format(sipDate, "%m/%d")))
+        }
+        
+      }
+    }
+
     # Add doubling lines if we are in log scale
     if(input$pScale == "log" & input$uTime == "realtiveT" & input$uPlot %in% c("cases","deaths","nCases","nDeaths")){
       doublingLines <- doublingLines()
@@ -1333,6 +1558,11 @@ server = function(input, output, session) {
   # Generate the initial output based on default parameters
   output$usaPlot <- renderPlotly({
     
+    # Handle when max date value is selected: 6-23-2020
+    validate(
+      need(input$daterange1[[2]] != max(countyDat$date), 'end date selected is beyond available data.')
+    )
+    
     # Title for the US Map plot
     output$us_map_title = renderText({  plotVarsUSmap()[["annoTitle"]] })
     # Add a subtitle to help interpret the legends
@@ -1347,6 +1577,7 @@ server = function(input, output, session) {
               # If we have N/As -- make them grey
               add_sf(data = usmapDat2[which(is.na(usmapDat2$value)),],
                      inherit = F,
+                     type = "scatter", #6-13-2020
                      split = ~state_name,
                      key = ~state_name,
                      color = I("gray75"),
@@ -1358,8 +1589,8 @@ server = function(input, output, session) {
                      text = ~paste0('</br>State: ', str_to_title(state_name),
                                     "</br>Doubling time (",format(defaultDate2, "%m/%d"),"): ", format(round(loessN, digits = 1),big.mark=",",scientific=FALSE), " days",
                                     '</br>Total ICU Beds: ', format(round(ICUbeds, digits = 1),big.mark=",",scientific=FALSE),
-                                    '</br>Estimated ICU Beds Occupied (',format(defaultDate2, "%m/%d"),"): ", format(round(icu_bed_occ, digits = 1),big.mark=",",scientific=FALSE),
-                                    '</br>Fraction ICU Beds Occupied (',format(defaultDate2, "%m/%d"),"): ", format(round(perc_icu_occ, digits = 1),big.mark=",",scientific=FALSE), "%",
+                                    '</br>Estimated ICU Beds Needed (',format(defaultDate2, "%m/%d"),"): ", format(round(icu_bed_occ, digits = 1),big.mark=",",scientific=FALSE),
+                                    '</br>Fraction ICU Beds Needed (',format(defaultDate2, "%m/%d"),"): ", format(round(perc_icu_occ, digits = 1),big.mark=",",scientific=FALSE), "%",
                                     '</br>Cases (', format(defaultDate1, "%m/%d"), ' - ', format(defaultDate2, "%m/%d"), '): ', format(cases,big.mark=",",scientific=FALSE),
                                     "</br>Deaths (",format(defaultDate1, "%m/%d")," - ",format(defaultDate2, "%m/%d"),"): ", format(deaths,big.mark=",",scientific=FALSE),
                                     "</br>Cases Per Million (",format(defaultDate1, "%m/%d")," - ",format(defaultDate2, "%m/%d"),"): ", format(round(casesPerMillion, digits = 1),big.mark=",",scientific=FALSE),
@@ -1379,6 +1610,7 @@ server = function(input, output, session) {
     # The actual data we are plotting
     isolate(p2 <- add_sf(p2, data = usmapDat2,
                          # isolate(p2 <- add_sf(p2, data = dat2[which(!is.na(dat2$value)),],
+                         type = "scatter", #6-13-2020
                          split = ~state_name,
                          key = ~state_name,
                          alpha = 1,
@@ -1389,8 +1621,8 @@ server = function(input, output, session) {
                          text = ~paste0('</br>State: ', str_to_title(state_name),
                                         "</br>Doubling time (",format(defaultDate2, "%m/%d"),"): ", format(round(loessN, digits = 1),big.mark=",",scientific=FALSE), " days",
                                         '</br>Total ICU Beds: ', format(round(ICUbeds, digits = 1),big.mark=",",scientific=FALSE),
-                                        '</br>Estimated ICU Beds Occupied (',format(defaultDate2, "%m/%d"),"): ", format(round(icu_bed_occ, digits = 1),big.mark=",",scientific=FALSE),
-                                        '</br>Fraction ICU Beds Occupied (',format(defaultDate2, "%m/%d"),"): ", format(round(perc_icu_occ, digits = 1),big.mark=",",scientific=FALSE), "%",
+                                        '</br>Estimated ICU Beds Needed (',format(defaultDate2, "%m/%d"),"): ", format(round(icu_bed_occ, digits = 1),big.mark=",",scientific=FALSE),
+                                        '</br>Fraction ICU Beds Needed (',format(defaultDate2, "%m/%d"),"): ", format(round(perc_icu_occ, digits = 1),big.mark=",",scientific=FALSE), "%",
                                         '</br>Cases (', format(defaultDate1, "%m/%d"), ' - ', format(defaultDate2, "%m/%d"), '): ', format(cases,big.mark=",",scientific=FALSE),
                                         "</br>Deaths (",format(defaultDate1, "%m/%d")," - ",format(defaultDate2, "%m/%d"),"): ", format(deaths,big.mark=",",scientific=FALSE),
                                         "</br>Cases Per Million (",format(defaultDate1, "%m/%d")," - ",format(defaultDate2, "%m/%d"),"): ", format(round(casesPerMillion, digits = 1),big.mark=",",scientific=FALSE),
@@ -1410,6 +1642,7 @@ server = function(input, output, session) {
     # State highlight
     isolate(p2 <- add_sf(p2,
                          inherit = F,
+                         type = "scatter", #6-13-2020
                          data = usmapDat2[which(usmapDat2$state_name == defaultState),],
                          split = ~state_name,
                          key = ~state_name,
@@ -1421,8 +1654,8 @@ server = function(input, output, session) {
                          text = ~paste0('</br>State: ', str_to_title(state_name),
                                         "</br>Doubling time (",format(defaultDate2, "%m/%d"),"): ", format(round(loessN, digits = 1),big.mark=",",scientific=FALSE), " days",
                                         '</br>Total ICU Beds: ', format(round(ICUbeds, digits = 1),big.mark=",",scientific=FALSE),
-                                        '</br>Estimated ICU Beds Occupied (',format(defaultDate2, "%m/%d"),"): ", format(round(icu_bed_occ, digits = 1),big.mark=",",scientific=FALSE),
-                                        '</br>Fraction ICU Beds Occupied (',format(defaultDate2, "%m/%d"),"): ", format(round(perc_icu_occ, digits = 1),big.mark=",",scientific=FALSE), "%",
+                                        '</br>Estimated ICU Beds Needed (',format(defaultDate2, "%m/%d"),"): ", format(round(icu_bed_occ, digits = 1),big.mark=",",scientific=FALSE),
+                                        '</br>Fraction ICU Beds Needed (',format(defaultDate2, "%m/%d"),"): ", format(round(perc_icu_occ, digits = 1),big.mark=",",scientific=FALSE), "%",
                                         '</br>Cases (', format(defaultDate1, "%m/%d"), ' - ', format(defaultDate2, "%m/%d"), '): ', format(cases,big.mark=",",scientific=FALSE),
                                         "</br>Deaths (",format(defaultDate1, "%m/%d")," - ",format(defaultDate2, "%m/%d"),"): ", format(deaths,big.mark=",",scientific=FALSE),
                                         "</br>Cases Per Million (",format(defaultDate1, "%m/%d")," - ",format(defaultDate2, "%m/%d"),"): ", format(round(casesPerMillion, digits = 1),big.mark=",",scientific=FALSE),
@@ -1442,6 +1675,7 @@ server = function(input, output, session) {
     
     suppressWarnings(isolate(p2 <- layout(p2, showlegend = FALSE )))
     suppressWarnings(isolate(p2 <- p2 %>% hide_colorbar()))
+
     #suppressWarnings(isolate(p2 %>% hide_colorbar()  ))
     #suppressWarnings(isolate(p2 <- colorbar(p2, title = "", tickvals = c(), ticktext =  c(), showscale=FALSE)))
     #suppressWarnings(isolate(p2 <- colorbar(p2, title = "Percentile Rank", tickvals = c(25, 50, 75, 100), ticktext =  c("25th","50th","75th","100th"), len = 0.6)))
@@ -1467,7 +1701,7 @@ server = function(input, output, session) {
     # print(buildStates()$value)
     
     # need to sort alphabetically by state (that is how the traces are drawn)
-    for(i in 1:length(sort(buildStates()$state_name))){
+    for(i in 1:length(sort(buildStates()$state_name))){ #6-13-2020
       plotlyProxy("usaPlot", session) %>%
         plotlyProxyInvoke("restyle",list(fillcolor = buildStates()$colorMap[which(buildStates()$state_name == sort(buildStates()$state_name)[i])]),(i-1))
     }
@@ -1500,8 +1734,8 @@ server = function(input, output, session) {
       # plotlyProxyInvoke("restyle",list(text = paste0("Cases: ",dat$cases)))
       plotlyProxyInvoke("restyle",list(text = paste0('</br>State: ', str_to_title(dat$state_name),
                                                      '</br>Total ICU Beds: ', format(round(dat$ICUbeds, digits = 1),big.mark=",",scientific=FALSE),
-                                                     '</br>Estimated ICU Beds Occupied (',format(input$daterange1[2], "%m/%d"),"): ", format(round(dat$icu_bed_occ, digits = 1),big.mark=",",scientific=FALSE),
-                                                     '</br>Fraction ICU Beds Occupied (',format(input$daterange1[2], "%m/%d"),"): ", format(round(dat$perc_icu_occ, digits = 1),big.mark=",",scientific=FALSE), "%",
+                                                     '</br>Estimated ICU Beds Needed (',format(input$daterange1[2], "%m/%d"),"): ", format(round(dat$icu_bed_occ, digits = 1),big.mark=",",scientific=FALSE),
+                                                     '</br>Fraction ICU Beds Needed (',format(input$daterange1[2], "%m/%d"),"): ", format(round(dat$perc_icu_occ, digits = 1),big.mark=",",scientific=FALSE), "%",
                                                      "</br>Doubling time (",format(input$daterange1[2], "%m/%d"),"): ", format(round(dat$loessN, digits = 1),big.mark=",",scientific=FALSE), " days",
                                                      '</br>Cases (', format(input$daterange1[1], "%m/%d"), ' - ', format(input$daterange1[2], "%m/%d"), '): ', format(dat$cases,big.mark=",",scientific=FALSE),
                                                      "</br>Deaths (",format(input$daterange1[1], "%m/%d")," - ",format(input$daterange1[2], "%m/%d"),"): ", format(dat$deaths,big.mark=",",scientific=FALSE),
@@ -1525,6 +1759,11 @@ server = function(input, output, session) {
   ######################################################################
   
   output$stateMapPlot <- renderPlotly({
+    
+    # Handle when max date value is selected: 6-23-2020
+    validate(
+      need(input$daterange1[[2]] != max(countyDat$date), 'end date selected is beyond available data.')
+    )
     
     # Add exception if no state is selected
     validate(
@@ -1633,9 +1872,16 @@ server = function(input, output, session) {
     if(length(dat$value) == 1){
       dat$colorMap = "#e6550d"
     } else{
-      colorCuts <- cut(dat$value, breaks = seq(min(dat$value,na.rm = T), max(dat$value,na.rm = T), len = 100), include.lowest = TRUE)
-      dat$colorMap <- colorRampPalette(colors = c("#ffffff", "#ffbe87", "#e6550d"))(99)[colorCuts]
+      if(length(which(is.infinite(dat$value)))>0){  #6-13-2020
+        colorCuts <- cut(dat$value, breaks = seq(min(dat$value[-which(is.infinite(dat$value))],na.rm = T), max(dat$value[-which(is.infinite(dat$value))],na.rm = T), len = 100), include.lowest = TRUE) #6-13-2020
+        dat$colorMap <- colorRampPalette(colors = c("#ffffff", "#ffbe87", "#e6550d"))(99)[colorCuts]
+      } else{
+        colorCuts <- cut(dat$value, breaks = seq(min(dat$value,na.rm = T), max(dat$value,na.rm = T), len = 100), include.lowest = TRUE) #6-13-2020
+        dat$colorMap <- colorRampPalette(colors = c("#ffffff", "#ffbe87", "#e6550d"))(99)[colorCuts]
+      }
     }
+    
+    
     
     # DA added
     # naIx <- which(is.na(pull(dat[,defaultValPlot])))
@@ -1651,6 +1897,7 @@ server = function(input, output, session) {
     #Silence the the following warning: No trace type specified: Based on info supplied, a 'scatter' trace seems appropriate. Read more about this trace type -> https://plot.ly/r/reference/#scatter
     isolate(p3 <- plot_ly())
     isolate(p3 <- add_sf(p3, data = dat,
+                         type = "scatter", #6-13-2020
                          inherit = T,
                          colors = colorPallette,
                          color = ~value,
@@ -1665,8 +1912,8 @@ server = function(input, output, session) {
                                         '</br>County: ', str_to_title(County),
                                         "</br>Doubling time (",format(isolate(input$daterange1[2]), "%m/%d"),"): ", format(round(loessN, digits = 1),big.mark=",",scientific=FALSE), " days",
                                         '</br>Total ICU Beds: ', format(round(ICUbeds, digits = 1),big.mark=",",scientific=FALSE),
-                                        '</br>Estimated ICU Beds Occupied (',format(input$daterange1[2], "%m/%d"),"): ", format(round(icu_bed_occ, digits = 1),big.mark=",",scientific=FALSE),
-                                        '</br>Fraction ICU Beds Occupied (',format(input$daterange1[2], "%m/%d"),"): ", format(round(perc_icu_occ, digits = 1),big.mark=",",scientific=FALSE), "%",
+                                        '</br>Estimated ICU Beds Needed (',format(input$daterange1[2], "%m/%d"),"): ", format(round(icu_bed_occ, digits = 1),big.mark=",",scientific=FALSE),
+                                        '</br>Fraction ICU Beds Needed (',format(input$daterange1[2], "%m/%d"),"): ", format(round(perc_icu_occ, digits = 1),big.mark=",",scientific=FALSE), "%",
                                         '</br>Cases (', format(isolate(input$daterange1[1]), "%m/%d"), ' - ', format(isolate(input$daterange1[2]), "%m/%d"), '): ', format(cases,big.mark=",",scientific=FALSE),
                                         "</br>Deaths (",format(isolate(input$daterange1[1]), "%m/%d")," - ",format(isolate(input$daterange1[2]), "%m/%d"),"): ", format(deaths,big.mark=",",scientific=FALSE),
                                         "</br>Cases Per Million (",format(isolate(input$daterange1[1]), "%m/%d")," - ",format(isolate(input$daterange1[2]), "%m/%d"),"): ", format(round(casesPerMillion, digits = 1),big.mark=",",scientific=FALSE),
@@ -1679,6 +1926,7 @@ server = function(input, output, session) {
     ))
     isolate(p3 <- add_sf(p3,data = dat[which(is.na(dat$value)),],
                          inherit = F,
+                         type = "scatter", #6-13-2020
                          split = ~county_fips,
                          key = ~county_fips,
                          color = I("gray75"),
@@ -1691,8 +1939,8 @@ server = function(input, output, session) {
                                         '</br>County: ', str_to_title(County),
                                         "</br>Doubling time (",format(isolate(input$daterange1[2]), "%m/%d"),"): ", format(round(loessN, digits = 1),big.mark=",",scientific=FALSE), " days",
                                         '</br>Total ICU Beds: ', format(round(ICUbeds, digits = 1),big.mark=",",scientific=FALSE),
-                                        '</br>Estimated ICU Beds Occupied (',format(input$daterange1[2], "%m/%d"),"): ", format(round(icu_bed_occ, digits = 1),big.mark=",",scientific=FALSE),
-                                        '</br>Fraction ICU Beds Occupied (',format(input$daterange1[2], "%m/%d"),"): ", format(round(perc_icu_occ, digits = 1),big.mark=",",scientific=FALSE), "%",
+                                        '</br>Estimated ICU Beds Needed (',format(input$daterange1[2], "%m/%d"),"): ", format(round(icu_bed_occ, digits = 1),big.mark=",",scientific=FALSE),
+                                        '</br>Fraction ICU Beds Needed (',format(input$daterange1[2], "%m/%d"),"): ", format(round(perc_icu_occ, digits = 1),big.mark=",",scientific=FALSE), "%",
                                         '</br>Cases (', format(isolate(input$daterange1[1]), "%m/%d"), ' - ', format(isolate(input$daterange1[2]), "%m/%d"), '): ', format(cases,big.mark=",",scientific=FALSE),
                                         "</br>Deaths (",format(isolate(input$daterange1[1]), "%m/%d")," - ",format(isolate(input$daterange1[2]), "%m/%d"),"): ", format(deaths,big.mark=",",scientific=FALSE),
                                         "</br>Cases Per Million (",format(isolate(input$daterange1[1]), "%m/%d")," - ",format(isolate(input$daterange1[2]), "%m/%d"),"): ", format(round(casesPerMillion, digits = 1),big.mark=",",scientific=FALSE),
@@ -1745,8 +1993,8 @@ server = function(input, output, session) {
                                                      '</br>County: ', str_to_title(dat$County),
                                                      "</br>Doubling Time (",format(isolate(input$daterange1[2]), "%m/%d"),"): ", format(round(dat$loessN, digits = 1), big.mark=",",scientific=FALSE), " days",
                                                      '</br>Total ICU Beds: ', format(round(dat$ICUbeds, digits = 1),big.mark=",",scientific=FALSE),
-                                                     '</br>Estimated ICU Beds Occupied (',format(input$daterange1[2], "%m/%d"),"): ", format(round(dat$icu_bed_occ, digits = 1),big.mark=",",scientific=FALSE),
-                                                     '</br>Fraction ICU Beds Occupied (',format(input$daterange1[2], "%m/%d"),"): ", format(round(dat$perc_icu_occ, digits = 1),big.mark=",",scientific=FALSE), "%",
+                                                     '</br>Estimated ICU Beds Needed (',format(input$daterange1[2], "%m/%d"),"): ", format(round(dat$icu_bed_occ, digits = 1),big.mark=",",scientific=FALSE),
+                                                     '</br>Fraction ICU Beds Needed (',format(input$daterange1[2], "%m/%d"),"): ", format(round(dat$perc_icu_occ, digits = 1),big.mark=",",scientific=FALSE), "%",
                                                      '</br>Cases (', format(input$daterange1[1], "%m/%d"), ' - ', format(input$daterange1[2], "%m/%d"), '): ', format(dat$cases,big.mark=",",scientific=FALSE),
                                                      "</br>Deaths (",format(input$daterange1[1], "%m/%d")," - ",format(input$daterange1[2], "%m/%d"),"): ", format(dat$deaths,big.mark=",",scientific=FALSE),
                                                      "</br>Cases Per Million (",format(input$daterange1[1], "%m/%d")," - ",format(input$daterange1[2], "%m/%d"),"): ", format(round(dat$casesPerMillion, digits = 1),big.mark=",",scientific=FALSE),

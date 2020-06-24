@@ -100,8 +100,8 @@ popEst <- read_csv(file = "./DataFiles/census_county_populations.csv")
 
 statePopEst <- popEst %>% 
   separate(NAME, c("County", "State"), sep = ", ") %>%
-  group_by(State) %>% 
-  summarise(value = sum(value))
+  dplyr::group_by(State) %>% 
+  dplyr::summarise(value = sum(value))
 
 ######################################################################
 # Get the number of new cases and deaths per day
@@ -109,20 +109,20 @@ statePopEst <- popEst %>%
 # New cases per day
 countyDat <- countyDat %>% 
   group_by(county,state,fips) %>% 
-  mutate(NewCases = cases - lag(cases, default = 0, order_by = date))
+  dplyr::mutate(NewCases = cases - lag(cases, default = 0, order_by = date))
 
 #New deaths per day
 countyDat <- countyDat %>% 
   group_by(county,state,fips) %>% 
-  mutate(NewDeaths = deaths - lag(deaths, default = 0, order_by = date))
+  dplyr::mutate(NewDeaths = deaths - lag(deaths, default = 0, order_by = date))
 
 #Now for the states
 stateDat <- stateDat %>% 
   group_by(state) %>% 
-  mutate(NewCases = cases - lag(cases, default = 0, order_by = date))
+  dplyr::mutate(NewCases = cases - lag(cases, default = 0, order_by = date))
 stateDat <- stateDat %>% 
   group_by(state) %>% 
-  mutate(NewDeaths = deaths - lag(deaths, default = 0, order_by = date))
+  dplyr::mutate(NewDeaths = deaths - lag(deaths, default = 0, order_by = date))
 
 ######################################################################
 # Join the US Census data with the NY Times data
@@ -135,19 +135,19 @@ countyDat <- countyDat %>%
 
 # Get cases and deaths per million population
 countyDat <- countyDat %>%
-  mutate(casesPerMillion = (cases/value)*1000000) %>%
-  mutate(deathsPerMillion = (deaths/value)*1000000) %>%
-  mutate(NewCasesPerMillion = (NewCases/value)*1000000) %>%
-  mutate(NewDeathsPerMillion = (NewDeaths/value)*1000000)
+  dplyr::mutate(casesPerMillion = (cases/value)*1000000) %>%
+  dplyr::mutate(deathsPerMillion = (deaths/value)*1000000) %>%
+  dplyr::mutate(NewCasesPerMillion = (NewCases/value)*1000000) %>%
+  dplyr::mutate(NewDeathsPerMillion = (NewDeaths/value)*1000000)
 
 # Now do for the states
 stateDat <- left_join(stateDat, statePopEst, by = c("state" = "State"))
 # Get cases and deaths per million population
 stateDat <- stateDat %>%
-  mutate(casesPerMillion = (cases/value)*1000000) %>%
-  mutate(deathsPerMillion = (deaths/value)*1000000) %>%
-  mutate(NewCasesPerMillion = (NewCases/value)*1000000) %>%
-  mutate(NewDeathsPerMillion = (NewDeaths/value)*1000000)
+  dplyr::mutate(casesPerMillion = (cases/value)*1000000) %>%
+  dplyr::mutate(deathsPerMillion = (deaths/value)*1000000) %>%
+  dplyr::mutate(NewCasesPerMillion = (NewCases/value)*1000000) %>%
+  dplyr::mutate(NewDeathsPerMillion = (NewDeaths/value)*1000000)
 
 ######################################################################
 # Set t = 0 to the first observed case in each county
@@ -156,7 +156,7 @@ stateDat <- stateDat %>%
 suppressWarnings( # this is noisy for N/As
   time_zero <- countyDat %>%
     group_by(state, county) %>%
-    summarise(first_case = min(date[which(cases>=10)])) %>%
+    dplyr::summarise(first_case = min(date[which(cases>=10)])) %>%
     ungroup
 )
 
@@ -164,7 +164,7 @@ suppressWarnings( # this is noisy for N/As
 # Set a new column for the time elapsed between the date column and the t=0 date for each row
 countyDat <- countyDat %>%
   left_join(time_zero, by = c("state", "county")) %>%
-  mutate(time = as.numeric(date - first_case))
+  dplyr::mutate(time = as.numeric(date - first_case))
 
 ######################################################################
 # State-mandated events -- mapped by Vivek, Travis, and Arman
@@ -322,6 +322,7 @@ ICU = rbind(ICU,nycCounts)
 #Also have to refigure out the NYC thing likely
 countyDat$ICUbeds <- as.double(NA)
 countyDat$icu_bed_occ <- as.double(NA)
+countyDat$tot_icu_bed_occ <- as.double(NA)
 for (i in 1:nrow(ICU)){
   idx_cur <- which((countyDat$state==ICU$State[i]) & (countyDat$county==ICU$County[i]))
   if (length(idx_cur)>0){
@@ -330,13 +331,17 @@ for (i in 1:nrow(ICU)){
   
 }
 
-## Vivek Comment: Assumes 4.4% of new cases are admitted, 
-## 30% of admitted patients escalate to the ICU, 
+## Vivek Comment: Assumes 4.4% of new cases are admitted,
+## 30% of admitted patients escalate to the ICU,
 ## and all ICU patients spend 9 days (time to discharge or death)
 
-icu_los <- 9
-hosp_frac <-0.044
-icu_frac <- 0.3
+icu_los <- 10
+# hosp_frac <-0.044
+# icu_frac <- 0.3
+# hosp_frac <-0.103
+hosp_frac <-0.127
+# hosp_frac <-0.033
+icu_frac <- 0.4
 min_cases <- 100
 
 all_states <- unique(countyDat$state)
@@ -346,6 +351,7 @@ for (j in 1:length(all_states)){
   idx_state <- which(countyDat$state == statefocus)
   caseDatastate <- countyDat[idx_state,]
   caseDatastate$icu_bed_occ <- as.double(NA)
+  caseDatastate$tot_icu_bed_occ <- as.double(NA)
   all_counties <- unique(caseDatastate$county)
   n <- length(all_counties)
   keep_counties <- unique(caseDatastate[which(caseDatastate$cases>=min_cases),]$county)
@@ -354,47 +360,63 @@ for (j in 1:length(all_states)){
     idx_cnty <- which(caseDatastate$county==all_counties[i])
     cnty_cur <- caseDatastate[idx_cnty,]
     if (nrow(cnty_cur)>(icu_los+1)){
-      vec_st <- cnty_cur$cases[1:(icu_los+1)]
-      cnty_cur$icu_bed_occ = rollsum(x = cnty_cur$cases, icu_los, align = "right", fill = as.double(NA))*hosp_frac*icu_frac
+      # Use NewCases for how many patients currently in the ICU
+      vec_st <- cnty_cur$NewCases[1:(icu_los+1)]
+      # vec_st <- cnty_cur$cases[1:(icu_los+1)]
+      # cnty_cur$icu_bed_occ = rollsum(x = cnty_cur$cases, icu_los, align = "right", fill = as.double(NA))*hosp_frac*icu_frac
+      cnty_cur$icu_bed_occ = rollsum(x = cnty_cur$NewCases, icu_los, align = "right", fill = as.double(NA))*hosp_frac*icu_frac
       vec_st_mut <- vec_st
-      for (k in 1:icu_los){
+      for (k in 1:(icu_los-1)){
         vec_st_mut[k] <- sum(vec_st[1:k])*hosp_frac*icu_frac
       }
-      cnty_cur$icu_bed_occ[1:(icu_los+1)] <- vec_st_mut
-      
-      # If we see a jump over 200% at t = 2 days with reference of t = 1 days and then back down under 100% at t = 3 days with t = 1 days as reference, set to N/A and interpolate to avg of surrounding values
-      # pctIncrease = cnty_cur %>%
-      #   mutate(pctIncrease1 = icu_bed_occ - lag(icu_bed_occ, n = 1, default = first(icu_bed_occ))) %>%
-      #   mutate(pctIncrease2 = icu_bed_occ - lag(icu_bed_occ, n = 2, default = first(icu_bed_occ)))
+      cnty_cur$icu_bed_occ[1:(icu_los-1)] <- vec_st_mut[1:(icu_los-1)]
       
       # If we see a jump over 200% at t = 2 days with reference of t = 1 days and then back down under 100% at t = 3 days with t = 1 days as reference, set to N/A and interpolate to avg of surrounding values
       pctIncrease = cnty_cur %>%
-        mutate(pctIncrease1 = icu_bed_occ / lag(icu_bed_occ, n = 1, default = first(icu_bed_occ))) %>%
-        mutate(pctIncrease2 = icu_bed_occ / lag(icu_bed_occ, n = 2, default = first(icu_bed_occ)))
+        dplyr::mutate(pctIncrease1 = icu_bed_occ / lag(icu_bed_occ, n = 1, default = first(icu_bed_occ))) %>%
+        dplyr::mutate(pctIncrease2 = icu_bed_occ / lag(icu_bed_occ, n = 2, default = first(icu_bed_occ)))
       
       #set extreme values as Na (peaks)
       if (is.na(any(abs(pctIncrease$pctIncrease1)<0.5 & abs(pctIncrease$pctIncrease2)>=1))==FALSE) {
         cnty_cur$icu_bed_occ[which(abs(pctIncrease$pctIncrease1)<0.5 & abs(pctIncrease$pctIncrease2)>=1) - 1] <- as.double(NA)
       }
-      # if (is.na(any(abs(pctIncrease$pctIncrease1)>2 & abs(pctIncrease$pctIncrease2)<1))==FALSE) {
-      #   cnty_cur[which(abs(pctIncrease$pctIncrease1)>2 & abs(pctIncrease$pctIncrease2)<1) - 1,'icu_bed_occ'] <- NA
-      # }
       
-      # #set extreme values as Na
-      # if (is.na(any(pctIncrease$pctIncrease1>3 & pctIncrease$pctIncrease2>3))==FALSE) {
-      #   cnty_cur[which(pctIncrease$pctIncrease1>3 & pctIncrease$pctIncrease2>3),'icu_bed_occ'] <- NA
-      # }
-      # if (is.na(any(pctIncrease$pctIncrease1< -3 & pctIncrease$pctIncrease2< -3))==FALSE) {
-      #   cnty_cur[which(pctIncrease$pctIncrease1< -3 & pctIncrease$pctIncrease2< -3),'icu_bed_occ'] <- NA
-      # }
       #interpolate NA to average of surrounding values
       cnty_cur$icu_bed_occ <- (na.locf(cnty_cur$icu_bed_occ,na.rm=FALSE) + na.locf(cnty_cur$icu_bed_occ,fromLast=TRUE,na.rm=FALSE))/2
       
       caseDatastate$icu_bed_occ[idx_cnty] <- cnty_cur$icu_bed_occ
+      
+      # Use cases for cumulative number of patients in the ICU
+      cnty_cur$tot_icu_bed_occ = (cnty_cur$cases)*hosp_frac*icu_frac
+      
+      # vec_st <- cnty_cur$cases[1:(icu_los+1)]
+      # cnty_cur$tot_icu_bed_occ = rollsum(x = cnty_cur$cases, icu_los, align = "right", fill = as.double(NA))*hosp_frac*icu_frac
+      # vec_st_mut <- vec_st
+      # for (k in 1:(icu_los-1)){
+      #   vec_st_mut[k] <- sum(vec_st[1:k])*hosp_frac*icu_frac
+      # }
+      # cnty_cur$tot_icu_bed_occ[1:(icu_los-1)] <- vec_st_mut[1:(icu_los-1)]
+      
+      # If we see a jump over 200% at t = 2 days with reference of t = 1 days and then back down under 100% at t = 3 days with t = 1 days as reference, set to N/A and interpolate to avg of surrounding values
+      pctIncrease = cnty_cur %>%
+        dplyr::mutate(pctIncrease1 = tot_icu_bed_occ / lag(tot_icu_bed_occ, n = 1, default = first(tot_icu_bed_occ))) %>%
+        dplyr::mutate(pctIncrease2 = tot_icu_bed_occ / lag(tot_icu_bed_occ, n = 2, default = first(tot_icu_bed_occ)))
+      
+      #set extreme values as Na (peaks)
+      if (is.na(any(abs(pctIncrease$pctIncrease1)<0.5 & abs(pctIncrease$pctIncrease2)>=1))==FALSE) {
+        cnty_cur$tot_icu_bed_occ[which(abs(pctIncrease$pctIncrease1)<0.5 & abs(pctIncrease$pctIncrease2)>=1) - 1] <- as.double(NA)
+      }
+      
+      #interpolate NA to average of surrounding values
+      cnty_cur$tot_icu_bed_occ <- (na.locf(cnty_cur$tot_icu_bed_occ,na.rm=FALSE) + na.locf(cnty_cur$tot_icu_bed_occ,fromLast=TRUE,na.rm=FALSE))/2
+      
+      caseDatastate$tot_icu_bed_occ[idx_cnty] <- cnty_cur$tot_icu_bed_occ
     }
   }
   countyDat$icu_bed_occ[idx_state] <- caseDatastate$icu_bed_occ
+  countyDat$tot_icu_bed_occ[idx_state] <- caseDatastate$tot_icu_bed_occ
 }
+countyDat$icu_bed_occ[which(countyDat$icu_bed_occ < 0)] <- 0
 # Convert to percent occupied
 countyDat$perc_icu_occ <- 100*(countyDat$icu_bed_occ/countyDat$ICUbeds)
 # Change infinite values to NA
@@ -417,6 +439,7 @@ ICUstate <- ICU %>%
 #Also have to refigure out the NYC thing likely
 stateDat$ICUbeds <- as.double(NA)
 stateDat$icu_bed_occ <- as.double(NA)
+stateDat$total_icu_bed_occ <- as.double(NA)
 for (i in 1:nrow(ICUstate)){
   idx_cur <- which((stateDat$state==ICUstate$State[i]))
   if (length(idx_cur)>0){
@@ -434,19 +457,34 @@ for (i in 1:length(all_states)){
   state_cur <- caseDatastate
   icuBedState <- caseDatastate$icu_bed_occ
   if (nrow(state_cur)>(icu_los+1)){
-    vec_st <- state_cur$cases[1:(icu_los+1)]
-    state_cur$icu_bed_occ = rollsum(x = state_cur$cases, icu_los, align = "right", fill = as.double(NA))*hosp_frac*icu_frac
+    # Use NewCases for how many patients currently in the ICU
+    # vec_st <- state_cur$cases[1:(icu_los+1)]
+    vec_st <- state_cur$NewCases[1:(icu_los+1)]
+    state_cur$icu_bed_occ = rollsum(x = state_cur$NewCases, icu_los, align = "right", fill = as.double(NA))*hosp_frac*icu_frac
+    # state_cur$icu_bed_occ = rollsum(x = state_cur$cases, icu_los, align = "right", fill = as.double(NA))*hosp_frac*icu_frac
     vec_st_mut <- vec_st
-    for (k in 1:icu_los){
+    for (k in 1:(icu_los-1)){
       vec_st_mut[k] <- sum(vec_st[1:k])*hosp_frac*icu_frac
     }
-    state_cur$icu_bed_occ[1:(icu_los+1)] <- vec_st_mut
+    state_cur$icu_bed_occ[1:(icu_los-1)] <- vec_st_mut[1:(icu_los-1)]
     
-    # caseDatastate$icu_bed_occ[idx_state] <- state_cur$icu_bed_occ
     icuBedState <- state_cur$icu_bed_occ
+    
+    # Use cases for cumulative number of patients in the ICU
+    state_cur$tot_icu_bed_occ = (state_cur$cases)*hosp_frac*icu_frac
+    # vec_st <- state_cur$cases[1:(icu_los+1)]
+    # state_cur$total_icu_bed_occ = rollsum(x = state_cur$cases, icu_los, align = "right", fill = as.double(NA))*hosp_frac*icu_frac
+    # vec_st_mut <- vec_st
+    # for (k in 1:(icu_los-1)){
+    #   vec_st_mut[k] <- sum(vec_st[1:k])*hosp_frac*icu_frac
+    # }
+    # state_cur$total_icu_bed_occ[1:(icu_los-1)] <- vec_st_mut[1:(icu_los-1)]
+    
+    totalIcuBedState <- state_cur$total_icu_bed_occ
   }
   # stateDat$icu_bed_occ[idx_state] <- caseDatastate$icu_bed_occ[idx_state]
   stateDat$icu_bed_occ[idx_state] <- icuBedState
+  stateDat$total_icu_bed_occ[idx_state] <- totalIcuBedState
 }
 
 
@@ -454,6 +492,230 @@ for (i in 1:length(all_states)){
 stateDat$perc_icu_occ <- 100*(stateDat$icu_bed_occ/stateDat$ICUbeds)
 # Change infinite values to NA
 stateDat$perc_icu_occ[is.infinite(stateDat$perc_icu_occ)] <- as.double(NA)
+
+# ######################################################################
+# # ICU BED Occupancy (Counties) V2 -- Implemented by Doug
+# ######################################################################
+# # Based on this model: https://www.medrxiv.org/content/10.1101/2020.04.07.20056226v1.full.pdf
+# # Based on cases over preceding period
+# 
+# #importing ICU bed data
+# ICU <- read.csv('./DataFiles/data-ICU-beds.txt')
+# 
+# # Fix NYC
+# nycCounties = c("New York", "Kings", "Queens", "Bronx", "Richmond")
+# nycCounts = colSums(ICU[which(ICU$County %in% nycCounties & ICU$State == "New York"),c("ICU.Beds","Total.Population","Population.Aged.60.","Percent.of.Population.Aged.60.")])
+# nycCounts = data.frame(State = "New York", County = "New York City", ICU.Beds = nycCounts["ICU.Beds"], Total.Population = nycCounts["Total.Population"],
+#                        Population.Aged.60. = nycCounts["Population.Aged.60."], Percent.of.Population.Aged.60. = as.double(NA), Residents.Aged.60..Per.Each.ICU.Bed = as.double(NA))
+# ICU = ICU[-which(ICU$State %in% "New York" & ICU$County %in% nycCounties),]
+# ICU = rbind(ICU,nycCounts)
+# 
+# # Fix KC Mo -- here, combine Cass, Clay, Jackson and Platte with KC
+# kcCounties = c("Cass", "Clay", "Jackson", "Platte")
+# kcCounts = colSums(ICU[which(ICU$County %in% kcCounties & ICU$State == "Missouri"),c("ICU.Beds","Total.Population","Population.Aged.60.","Percent.of.Population.Aged.60.")])
+# kcCounts = data.frame(State = "Missouri", County = "Kansas City", ICU.Beds = kcCounts["ICU.Beds"], Total.Population = kcCounts["Total.Population"],
+#                       Population.Aged.60. = kcCounts["Population.Aged.60."], Percent.of.Population.Aged.60. = as.double(NA), Residents.Aged.60..Per.Each.ICU.Bed = as.double(NA))
+# ICU = ICU[-which(ICU$State %in% "Missouri" & ICU$County %in% kcCounties),]
+# ICU = rbind(ICU,nycCounts)
+# 
+# ##DOUG --> Can you do this smarter :) Just want to add the ICU bed data for each county to our table
+# #Also have to refigure out the NYC thing likely
+# countyDat$ICUbeds <- as.double(NA)
+# countyDat$icu_bed_occ <- as.double(NA)
+# for (i in 1:nrow(ICU)){
+#   idx_cur <- which((countyDat$state==ICU$State[i]) & (countyDat$county==ICU$County[i]))
+#   if (length(idx_cur)>0){
+#     countyDat$ICUbeds[idx_cur] <- ICU$ICU.Beds[i]
+#   }
+#   
+# }
+# 
+# ## Vivek Comment: Assumes 4.4% of new cases are admitted, 
+# ## 30% of admitted patients escalate to the ICU, 
+# ## and all ICU patients spend 9 days (time to discharge or death)
+# 
+# icu_los <- 9
+# hosp_frac <-0.044
+# icu_frac <- 0.3
+# min_cases <- 100
+# 
+# dailyICUrate <- 0.03
+# weeklyICUrate <- 0.0015
+# 
+# all_states <- unique(countyDat$state)
+# # start_time <- Sys.time()
+# for (j in 1:length(all_states)){
+#   statefocus <- all_states[j]
+#   idx_state <- which(countyDat$state == statefocus)
+#   caseDatastate <- countyDat[idx_state,]
+#   caseDatastate$icu_bed_occ <- as.double(NA)
+#   all_counties <- unique(caseDatastate$county)
+#   n <- length(all_counties)
+#   keep_counties <- unique(caseDatastate[which(caseDatastate$cases>=min_cases),]$county)
+#   most_recent_dbl_df <- data.frame(county=all_counties,state=rep(statefocus,n,1),cur_double=rep(as.double(NA),n,1))
+#   for (i in 1:length(all_counties)){
+#     idx_cnty <- which(caseDatastate$county==all_counties[i])
+#     cnty_cur <- caseDatastate[idx_cnty,]
+#     if (nrow(cnty_cur)>(icu_los+1)){
+#       # vec_st <- cnty_cur$cases[1:(icu_los+1)]
+#       
+#       #ICU Daily Admissions: 0.137*DailyNewCases + 0.078*NewWeeklyCases
+#       #ICU Daily Discharged: 0.397*DailyAdmitted4DaysAgo + 0.603*[0.144*(0.783*DailyAdmitted4DaysAgo + 0.217*DailyAdmitted15DaysAgo) + 0.856*(0.444*DailyAdmitted6DaysAgo + 0.556*DailyAdmitted20DaysAgo)]
+#       
+#       # Set negative new cases to 0 (this is due to issues with reporting)
+#       cnty_cur$NewCases[which(cnty_cur$NewCases < 0)] <- 0
+#       # Pad the front with 6 days of 0 cases (before the first case, there were no cases)
+#       weeklyNewCases <- rollsum(x = c(rep(0,6),cnty_cur$NewCases), k = 7, align = "left")
+#       # dailyAdmissions <- 0.137*cnty_cur$NewCases + 0.078+weeklyNewCases
+#       dailyAdmissions <- dailyICUrate*cnty_cur$NewCases + weeklyICUrate*weeklyNewCases
+#       # Pad the front with 4 days of 0 cases (before the first case, there were no cases)
+#       dailyAdmissions4DaysPrior <- c(rep(0,4),dailyAdmissions[1:(length(dailyAdmissions)-4)])
+#       dailyAdmissions6daysPrior <- c(rep(0,6),dailyAdmissions[1:(length(dailyAdmissions)-6)])
+#       if(length(dailyAdmissions)>15){
+#         dailyAdmissions15DaysPrior <- c(rep(0,15),dailyAdmissions[1:(length(dailyAdmissions)-15)])
+#       } else{
+#         dailyAdmissions15DaysPrior <- c(rep(0,length(dailyAdmissions)))
+#       }
+#       if(length(dailyAdmissions)>20){
+#         dailyAdmissions20DaysPrior <- c(rep(0,20),dailyAdmissions[1:(length(dailyAdmissions)-20)])
+#       } else{
+#         dailyAdmissions20DaysPrior <- c(rep(0,length(dailyAdmissions)))
+#       }
+#       dailyDischarged <- 0.397*dailyAdmissions4DaysPrior + 0.603*(0.144*(0.783*dailyAdmissions4DaysPrior + 0.217*dailyAdmissions15DaysPrior) + 0.856*(0.444*dailyAdmissions6daysPrior + 0.556*dailyAdmissions20DaysPrior))
+#       
+#       for(z in 1:length(dailyAdmissions)){
+#         if(z == 1){
+#           dailyICU <- c(0)
+#         } else{
+#           toAdd <- dailyICU[z-1] + dailyAdmissions[z] - dailyDischarged[z]
+#           if(toAdd<0){
+#             toAdd <- 0
+#           }
+#           dailyICU <- c(dailyICU,toAdd)
+#         }
+#       }
+#       
+#       cnty_cur$icu_bed_occ <- dailyICU
+#       
+#       # # If we see a jump over 200% at t = 2 days with reference of t = 1 days and then back down under 100% at t = 3 days with t = 1 days as reference, set to N/A and interpolate to avg of surrounding values
+#       # pctIncrease = cnty_cur %>%
+#       #   mutate(pctIncrease1 = icu_bed_occ / lag(icu_bed_occ, n = 1, default = first(icu_bed_occ))) %>%
+#       #   mutate(pctIncrease2 = icu_bed_occ / lag(icu_bed_occ, n = 2, default = first(icu_bed_occ)))
+#       # 
+#       # #set extreme values as Na (peaks)
+#       # if (is.na(any(abs(pctIncrease$pctIncrease1)<0.5 & abs(pctIncrease$pctIncrease2)>=1))==FALSE) {
+#       #   cnty_cur$icu_bed_occ[which(abs(pctIncrease$pctIncrease1)<0.5 & abs(pctIncrease$pctIncrease2)>=1) - 1] <- as.double(NA)
+#       # }
+#       # #interpolate NA to average of surrounding values
+#       # cnty_cur$icu_bed_occ <- (na.locf(cnty_cur$icu_bed_occ,na.rm=FALSE) + na.locf(cnty_cur$icu_bed_occ,fromLast=TRUE,na.rm=FALSE))/2
+#       # 
+#       caseDatastate$icu_bed_occ[idx_cnty] <- cnty_cur$icu_bed_occ
+#     }
+#   }
+#   countyDat$icu_bed_occ[idx_state] <- caseDatastate$icu_bed_occ
+# }
+# # Convert to percent occupied
+# countyDat$perc_icu_occ <- 100*(countyDat$icu_bed_occ/countyDat$ICUbeds)
+# # Change infinite values to NA
+# countyDat$perc_icu_occ[is.infinite(countyDat$perc_icu_occ)] <- as.double(NA)
+# 
+# 
+# ######################################################################
+# # ICU BED Occupancy (States) -- V2 -- Implemented by Doug
+# ######################################################################
+# # Based on this model: https://www.medrxiv.org/content/10.1101/2020.04.07.20056226v1.full.pdf
+# # Based on cases over preceding period
+# 
+# # Get the beds per state
+# ICUstate <- ICU %>%
+#   group_by(State) %>%
+#   summarise(ICU.Beds = sum(ICU.Beds,na.rm = T))
+# 
+# ##DOUG --> Can you do this smarter :) Just want to add the ICU bed data for each county to our table
+# #Also have to refigure out the NYC thing likely
+# stateDat$ICUbeds <- as.double(NA)
+# stateDat$icu_bed_occ <- as.double(NA)
+# for (i in 1:nrow(ICUstate)){
+#   idx_cur <- which((stateDat$state==ICUstate$State[i]))
+#   if (length(idx_cur)>0){
+#     stateDat$ICUbeds[idx_cur] <- ICUstate$ICU.Beds[i]
+#   }
+#   
+# }
+# 
+# dailyICUrate <- 0.03
+# weeklyICUrate <- 0.0015
+# 
+# all_states <- unique(stateDat$state)
+# for (i in 1:length(all_states)){
+#   statefocus <- all_states[i]
+#   idx_state <- which(stateDat$state == statefocus)
+#   caseDatastate <- stateDat[idx_state,]
+#   # idx_state <- which(caseDatastate$county==all_counties[i])
+#   state_cur <- caseDatastate
+#   icuBedState <- caseDatastate$icu_bed_occ
+#   if (nrow(state_cur)>(icu_los+1)){
+#     # vec_st <- state_cur$cases[1:(icu_los+1)]
+#     
+#     #ICU Daily Admissions: 0.137*DailyNewCases + 0.078*NewWeeklyCases
+#     #ICU Daily Discharged: 0.397*DailyAdmitted4DaysAgo + 0.603*[0.144*(0.783*DailyAdmitted4DaysAgo + 0.217*DailyAdmitted15DaysAgo) + 0.856*(0.444*DailyAdmitted6DaysAgo + 0.556*DailyAdmitted20DaysAgo)]
+#     
+#     # Set negative new cases to 0 (this is due to issues with reporting)
+#     state_cur$NewCases[which(state_cur$NewCases < 0)] <- 0
+#     # Pad the front with 6 days of 0 cases (before the first case, there were no cases)
+#     weeklyNewCases <- rollsum(x = c(rep(0,6),state_cur$NewCases), k = 7, align = "left")
+#     # dailyAdmissions <- 0.137*cnty_cur$NewCases + 0.078+weeklyNewCases
+#     dailyAdmissions <- dailyICUrate*state_cur$NewCases + weeklyICUrate*weeklyNewCases
+#     # Pad the front with 4 days of 0 cases (before the first case, there were no cases)
+#     dailyAdmissions4DaysPrior <- c(rep(0,4),dailyAdmissions[1:(length(dailyAdmissions)-4)])
+#     dailyAdmissions6daysPrior <- c(rep(0,6),dailyAdmissions[1:(length(dailyAdmissions)-6)])
+#     if(length(dailyAdmissions)>15){
+#       dailyAdmissions15DaysPrior <- c(rep(0,15),dailyAdmissions[1:(length(dailyAdmissions)-15)])
+#     } else{
+#       dailyAdmissions15DaysPrior <- c(rep(0,length(dailyAdmissions)))
+#     }
+#     if(length(dailyAdmissions)>20){
+#       dailyAdmissions20DaysPrior <- c(rep(0,20),dailyAdmissions[1:(length(dailyAdmissions)-20)])
+#     } else{
+#       dailyAdmissions20DaysPrior <- c(rep(0,length(dailyAdmissions)))
+#     }
+#     dailyDischarged <- 0.397*dailyAdmissions4DaysPrior + 0.603*(0.144*(0.783*dailyAdmissions4DaysPrior + 0.217*dailyAdmissions15DaysPrior) + 0.856*(0.444*dailyAdmissions6daysPrior + 0.556*dailyAdmissions20DaysPrior))
+#     
+#     for(z in 1:length(dailyAdmissions)){
+#       if(z == 1){
+#         dailyICU <- c(0)
+#       } else{
+#         toAdd <- dailyICU[z-1] + dailyAdmissions[z] - dailyDischarged[z]
+#         if(toAdd<0){
+#           toAdd <- 0
+#         }
+#         dailyICU <- c(dailyICU,toAdd)
+#       }
+#     }
+#     
+#     state_cur$icu_bed_occ <- dailyICU
+#     
+#     icuBedState <- state_cur$icu_bed_occ
+#     
+#     # state_cur$icu_bed_occ = rollsum(x = state_cur$cases, icu_los, align = "right", fill = as.double(NA))*hosp_frac*icu_frac
+#     # vec_st_mut <- vec_st
+#     # for (k in 1:icu_los){
+#     #   vec_st_mut[k] <- sum(vec_st[1:k])*hosp_frac*icu_frac
+#     # }
+#     # state_cur$icu_bed_occ[1:(icu_los+1)] <- vec_st_mut
+#     
+#     # caseDatastate$icu_bed_occ[idx_state] <- state_cur$icu_bed_occ
+#     # icuBedState <- state_cur$icu_bed_occ
+#   }
+#   # stateDat$icu_bed_occ[idx_state] <- caseDatastate$icu_bed_occ[idx_state]
+#   stateDat$icu_bed_occ[idx_state] <- icuBedState
+# }
+# 
+# 
+# # Convert to percent occupied
+# stateDat$perc_icu_occ <- 100*(stateDat$icu_bed_occ/stateDat$ICUbeds)
+# # Change infinite values to NA
+# stateDat$perc_icu_occ[is.infinite(stateDat$perc_icu_occ)] <- as.double(NA)
 
 ######################################################################
 # Get the county doubling time -- Implemented by Travis
@@ -661,3 +923,5 @@ colnames(plotTable) <- c("Date","County","State","Cases","Deaths","New Cases","N
 ######################################################################
 save.image(file = "./DataFiles/CovidCountiesWorkspace.RData")
 
+# countyDat <- countyDat[which(countyDat$date <= as.Date("2020-04-15")),]
+# stateDat <- stateDat[which(stateDat$date <= as.Date("2020-04-15")),]
