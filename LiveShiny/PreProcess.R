@@ -339,9 +339,16 @@ icu_los <- 10
 # hosp_frac <-0.044
 # icu_frac <- 0.3
 # hosp_frac <-0.103
-hosp_frac <-0.127
+# hosp_frac <-0.127 #8-19-2020
 # hosp_frac <-0.033
-icu_frac <- 0.4
+# icu_frac <- 0.4 #8-14-2020 #8-19-2020
+
+# hosp_frac <- 0.0626 #8-19-2020
+hosp_frac <- 0.0826 #8-19-2020
+icu_frac <- 0.2964 #8-19-2020
+# icu_frac <- 0.24198 #8-19-2020
+
+# icu_frac <- 2.380952 #~42 percent of patients in the ICU die #8-14-2020 - https://www.healthline.com/health-news/covid-19-mortality-is-going-down-in-icus-what-this-means-for-the-pandemic#The-mortality-rate-is-dropping,-but-its-still-high
 min_cases <- 100
 
 all_states <- unique(countyDat$state)
@@ -361,13 +368,16 @@ for (j in 1:length(all_states)){
     cnty_cur <- caseDatastate[idx_cnty,]
     if (nrow(cnty_cur)>(icu_los+1)){
       # Use NewCases for how many patients currently in the ICU
-      vec_st <- cnty_cur$NewCases[1:(icu_los+1)]
+      vec_st <- cnty_cur$NewCases[1:(icu_los+1)] #8-14-2020
+      # vec_st <- cnty_cur$NewDeaths[1:(icu_los+1)] #8-14-2020
       # vec_st <- cnty_cur$cases[1:(icu_los+1)]
       # cnty_cur$icu_bed_occ = rollsum(x = cnty_cur$cases, icu_los, align = "right", fill = as.double(NA))*hosp_frac*icu_frac
-      cnty_cur$icu_bed_occ = rollsum(x = cnty_cur$NewCases, icu_los, align = "right", fill = as.double(NA))*hosp_frac*icu_frac
+      cnty_cur$icu_bed_occ = rollsum(x = cnty_cur$NewCases, icu_los, align = "right", fill = as.double(NA))*hosp_frac*icu_frac #8-14-2020
+      # cnty_cur$icu_bed_occ = rollsum(x = cnty_cur$NewDeaths, icu_los, align = "right", fill = as.double(NA))*icu_frac #8-14-2020
       vec_st_mut <- vec_st
       for (k in 1:(icu_los-1)){
-        vec_st_mut[k] <- sum(vec_st[1:k])*hosp_frac*icu_frac
+        vec_st_mut[k] <- sum(vec_st[1:k])*hosp_frac*icu_frac #8-14-2020
+        # vec_st_mut[k] <- sum(vec_st[1:k])*icu_frac #8-14-2020
       }
       cnty_cur$icu_bed_occ[1:(icu_los-1)] <- vec_st_mut[1:(icu_los-1)]
       
@@ -387,7 +397,8 @@ for (j in 1:length(all_states)){
       caseDatastate$icu_bed_occ[idx_cnty] <- cnty_cur$icu_bed_occ
       
       # Use cases for cumulative number of patients in the ICU
-      cnty_cur$tot_icu_bed_occ = (cnty_cur$cases)*hosp_frac*icu_frac
+      cnty_cur$tot_icu_bed_occ = (cnty_cur$cases)*hosp_frac*icu_frac  #8-14-2020
+      # cnty_cur$tot_icu_bed_occ = (cnty_cur$cases)*icu_frac  #8-14-2020
       
       # vec_st <- cnty_cur$cases[1:(icu_los+1)]
       # cnty_cur$tot_icu_bed_occ = rollsum(x = cnty_cur$cases, icu_los, align = "right", fill = as.double(NA))*hosp_frac*icu_frac
@@ -427,7 +438,7 @@ countyDat$perc_icu_occ[is.infinite(countyDat$perc_icu_occ)] <- as.double(NA)
 # print(end_time-start_time)
 
 ######################################################################
-# ICU BED Occupancy (Counties) -- Counties implemented by Travis -- extended by Doug
+# ICU BED Occupancy (States) -- Counties implemented by Travis -- states extended by Doug
 ######################################################################
 
 # Get the beds per state
@@ -459,19 +470,23 @@ for (i in 1:length(all_states)){
   if (nrow(state_cur)>(icu_los+1)){
     # Use NewCases for how many patients currently in the ICU
     # vec_st <- state_cur$cases[1:(icu_los+1)]
-    vec_st <- state_cur$NewCases[1:(icu_los+1)]
-    state_cur$icu_bed_occ = rollsum(x = state_cur$NewCases, icu_los, align = "right", fill = as.double(NA))*hosp_frac*icu_frac
+    vec_st <- state_cur$NewCases[1:(icu_los+1)] #8-14-2020
+    # vec_st <- state_cur$NewDeaths[1:(icu_los+1)] #8-14-2020
+    # state_cur$icu_bed_occ = rollsum(x = state_cur$NewDeaths, icu_los, align = "right", fill = as.double(NA))*icu_frac #8-14-2020
+    state_cur$icu_bed_occ = rollsum(x = state_cur$NewCases, icu_los, align = "right", fill = as.double(NA))*hosp_frac*icu_frac #8-14-2020
     # state_cur$icu_bed_occ = rollsum(x = state_cur$cases, icu_los, align = "right", fill = as.double(NA))*hosp_frac*icu_frac
     vec_st_mut <- vec_st
     for (k in 1:(icu_los-1)){
-      vec_st_mut[k] <- sum(vec_st[1:k])*hosp_frac*icu_frac
+      vec_st_mut[k] <- sum(vec_st[1:k])*hosp_frac*icu_frac #8-14-2020
+      # vec_st_mut[k] <- sum(vec_st[1:k])*icu_frac #8-14-2020
     }
     state_cur$icu_bed_occ[1:(icu_los-1)] <- vec_st_mut[1:(icu_los-1)]
     
     icuBedState <- state_cur$icu_bed_occ
     
     # Use cases for cumulative number of patients in the ICU
-    state_cur$tot_icu_bed_occ = (state_cur$cases)*hosp_frac*icu_frac
+    state_cur$tot_icu_bed_occ = (state_cur$cases)*hosp_frac*icu_frac #8-14-2020
+    # state_cur$tot_icu_bed_occ = (state_cur$cases)*icu_frac #8-14-2020
     # vec_st <- state_cur$cases[1:(icu_los+1)]
     # state_cur$total_icu_bed_occ = rollsum(x = state_cur$cases, icu_los, align = "right", fill = as.double(NA))*hosp_frac*icu_frac
     # vec_st_mut <- vec_st

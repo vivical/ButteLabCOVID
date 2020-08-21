@@ -21,10 +21,43 @@ library(urbnmapr) #devtools::install_github("UrbanInstitute/urbnmapr")
 library(USAboundaries) # to get state boundaries
 # library(mapproj) albers projection? -- seems non-trivial
 
+# New Libraries 8-20-2020
+library(DT)
+library(shinyjs) # requires shinyjs !
+
 # Load Elliott Libraries
 library(plotly)
 library(ggplot2)
 load(file = "./DataFiles/CovidCountiesWorkspace.RData")
+# Get a table for ICU
+tableDat <- tibble(State = countyDat$state, County = countyDat$county, Date = countyDat$date, "Estimated ICU Beds Needed" = countyDat$icu_bed_occ, 
+                   "ICU Beds Available" = countyDat$ICUbeds, "Estimated % ICU Beds Needed" = countyDat$perc_icu_occ/100, 
+                   "80% CI" = paste0(round(countyDat$perc_icu_occ - 0.585*countyDat$perc_icu_occ,digits = 2), "-", 
+                                                   round(countyDat$perc_icu_occ + 0.585*countyDat$perc_icu_occ,digits = 2),"%"))
+plotTableDat <- tableDat
+######
+# Add state data to the county data
+stateDatAdd <- tibble(date = stateDat$date, county = paste0(stateDat$state," State"), state = stateDat$state, fips = NA, cases = stateDat$cases, deaths = stateDat$deaths,
+                      NewCases = stateDat$NewCases, NewDeaths = stateDat$NewDeaths, NAME =  paste0(stateDat$state," State"), variable = "POP", value = stateDat$value,
+                      casesPerMillion = stateDat$casesPerMillion, deathsPerMillion = stateDat$deathsPerMillion, NewCasesPerMillion = stateDat$NewCasesPerMillion,
+                      NewDeathsPerMillion = stateDat$NewDeathsPerMillion, double = stateDat$double, ICUbeds = stateDat$ICUbeds,
+                      icu_bed_occ = stateDat$icu_bed_occ, tot_icu_bed_occ = stateDat$total_icu_bed_occ, perc_icu_occ = stateDat$perc_icu_occ,
+                      loessN = stateDat$loessN)
+
+suppressWarnings( # this is noisy for N/As
+  time_zero_state <- stateDatAdd %>%
+    group_by(state) %>%
+    dplyr::summarise(first_case = min(date[which(cases>=10)])) %>%
+    ungroup
+)
+stateDatAdd <- stateDatAdd %>%
+  left_join(time_zero_state, by = c("state")) %>%
+  dplyr::mutate(time = as.numeric(date - first_case))
+
+countyDat <- rbind(countyDat,stateDatAdd)
+######
+
+# countyDat$perc_icu_occ <- countyDat$perc_icu_occ/100 #08-14-2020
 # load(file = "/home/oskotsky/PycharmProjects/covidcounties/DataFiles/CovidCountiesWorkspace.RData")
 addResourcePath("www", paste(getwd() , "/www", sep="") )
 
@@ -38,11 +71,9 @@ window.onmousedown = resetTimer; // catches mouse movements
 window.onclick = resetTimer;     // catches mouse clicks
 window.onscroll = resetTimer;    // catches scrolling
 window.onkeypress = resetTimer;  //catches keyboard actions
-
 function logout() {
 Shiny.setInputValue('timeOut', '%ss')
 }
-
 function resetTimer() {
 clearTimeout(t);
 t = setTimeout(logout, %s);  // time is in milliseconds (1000 is 1 second)
@@ -63,7 +94,7 @@ idleTimer();", timeoutSeconds*1000, timeoutSeconds, timeoutSeconds*1000)
 
 
 ui = fluidPage( style='margin-left:5px; margin-right:5px', title="COVID-19 County Tracker",
-                
+                useShinyjs(), #8-20-2020 allows us to show and hide table with confidence intervals
                 tags$script(inactivity), 
                 tags$head(includeHTML("www/google_analytics.html")), # Add google analytics for tracking site
                 tags$head(tags$link(rel="shortcut icon", href="www/virus2_icon.svg")),  # Icon to display in browser tab
@@ -134,7 +165,7 @@ ui = fluidPage( style='margin-left:5px; margin-right:5px', title="COVID-19 Count
                                                                                      "New cases" = "nCases",
                                                                                      "New deaths" = "nDeaths",
                                                                                      "Doubling time"='loessN',
-                                                                                     "Estimated ICU beds needed"='ICUbeds'))),#4-7-2020 #TRAVIS ZACK added this for doubling option
+                                                                                     "Estimated % ICU beds needed"='ICUbeds'))),#4-7-2020 #TRAVIS ZACK added this for doubling option
                             div( class="col-sm-3 col-xs-6", radioButtons("uTime", "Time Scale",
                                                                          selected = "absoluteT", # default value
                                                                          choices = c("Aligned (since first 10 cases)" = "realtiveT",
@@ -230,6 +261,14 @@ ui = fluidPage( style='margin-left:5px; margin-right:5px', title="COVID-19 Count
                 ), # ends "mainPanel" from "Main Plot" section
                 #fluidRow(p(tags$small(".")) ), #creates a tiny amount of vertical space
                 
+                ######################################################################
+                #  Confidence Interval Table
+                ######################################################################
+                div( class="container-fluid",
+                     div(DT::dataTableOutput("CITable")), #8-20-2020
+                     p( style="margin-bottom:0px; padding-bottom:0px", tags$small("."))
+                ), # ends "CITable" from "Confidence Interval Table" section
+                #fluidRow(p(tags$small(".")) ), #creates a tiny amount of vertical space
                 
                 ######################################################################
                 #  US Map and State Map
@@ -390,6 +429,56 @@ ui = fluidPage( style='margin-left:5px; margin-right:5px', title="COVID-19 Count
 ### Timeout
 
 server = function(input, output, session) {
+  
+  # Data table for confidence interval 8-20-2020
+  observeEvent(input$uPlot, {
+    if (input$uPlot == "ICUbeds"){
+      plotTableDat <- tableDat[which(tableDat$State == input$cState),]
+      output$CITable <- DT::renderDataTable({
+        datatable(plotTableDat, filter = 'top', 
+                  options = list(
+                    pageLength = 5, 
+                    autoWidth = FALSE,
+                    order = list(list(2, 'desc'), list(5, 'desc'))),
+                  rownames= FALSE
+        ) %>% formatRound(columns=c('Estimated ICU Beds Needed'), digits=2) %>%
+          formatPercentage(c("Estimated % ICU Beds Needed"), 2)
+      })
+      show("CITable")
+      } else {
+        hide("CITable")
+      }
+  })
+  observeEvent(input$cState, {
+    if (input$uPlot == "ICUbeds"){
+      plotTableDat <- tableDat[which(tableDat$State == input$cState),]
+      output$CITable <- DT::renderDataTable({
+        datatable(plotTableDat, filter = 'top', 
+                  options = list(
+                    pageLength = 5, 
+                    autoWidth = FALSE,
+                    order = list(list(2, 'desc'), list(5, 'desc'))),
+                  rownames= FALSE
+        ) %>% formatRound(columns=c('Estimated ICU Beds Needed'), digits=2) %>%
+          formatPercentage(c("Estimated % ICU Beds Needed"), 2)
+      })
+      show("CITable")
+    } else {
+      hide("CITable")
+    }
+  })
+  output$CITable <- DT::renderDataTable({
+    datatable(plotTableDat, filter = 'top', 
+              options = list(
+                pageLength = 5, 
+                autoWidth = FALSE,
+                order = list(list(2, 'desc'),list(5, 'desc'))),
+              rownames= FALSE
+    ) %>% formatRound(columns=c('Estimated ICU Beds Needed'), digits=2) %>%
+      formatPercentage(c("Estimated % ICU Beds Needed"), 2)
+  })
+  
+  #########
   
   observeEvent(input$timeOut, { 
     print(paste0("Session (", session$token, ") timed out at: ", Sys.time()))
@@ -701,6 +790,10 @@ server = function(input, output, session) {
     }
     if(input$uPlot == "loessN"){
       yAxis[["autorange"]] <- "reversed"
+    }
+    # change to percentage if ICU is selected 8-14-2020
+    if(input$uPlot == "ICUbeds"){
+      yAxis[["ticksuffix"]] = '%' #sets to percentage
     }
     # Return a list based on the selected parameters
     list(plotVar=plotVar,valueLab=valueLab,annoTitle=annoTitle,yAxis=yAxis)
@@ -1328,7 +1421,7 @@ server = function(input, output, session) {
     # Creat little message under graph that (usually) talks about doubling time
     output$doubling_time = renderText({ 
       if( input$uPlot == "ICUbeds" ){
-        paste("Estimations assume a 12.7% hospitalization rate, 40% ICU rate")
+        paste("Estimations assume a 8.26% hospitalization rate, 29.6% ICU rate")
       }else{
         paste('Fastest doubling time in state is ',fastest_dbl$county,': ',as.character(round(fastest_dbl$cur_double)), 'days')         
       }
@@ -1503,7 +1596,7 @@ server = function(input, output, session) {
         
       }
     }
-
+    
     # Add doubling lines if we are in log scale
     if(input$pScale == "log" & input$uTime == "realtiveT" & input$uPlot %in% c("cases","deaths","nCases","nDeaths")){
       doublingLines <- doublingLines()
@@ -1675,7 +1768,7 @@ server = function(input, output, session) {
     
     suppressWarnings(isolate(p2 <- layout(p2, showlegend = FALSE )))
     suppressWarnings(isolate(p2 <- p2 %>% hide_colorbar()))
-
+    
     #suppressWarnings(isolate(p2 %>% hide_colorbar()  ))
     #suppressWarnings(isolate(p2 <- colorbar(p2, title = "", tickvals = c(), ticktext =  c(), showscale=FALSE)))
     #suppressWarnings(isolate(p2 <- colorbar(p2, title = "Percentile Rank", tickvals = c(25, 50, 75, 100), ticktext =  c("25th","50th","75th","100th"), len = 0.6)))
