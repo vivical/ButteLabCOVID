@@ -344,8 +344,10 @@ icu_los <- 10
 # icu_frac <- 0.4 #8-14-2020 #8-19-2020
 
 # hosp_frac <- 0.0626 #8-19-2020
-hosp_frac <- 0.0826 #8-19-2020
-icu_frac <- 0.2964 #8-19-2020
+# hosp_frac <- 0.0826 #8-19-2020
+hosp_frac <- 0.0558 #9-15-2020
+icu_frac <- 0.22908 #9-15-2020
+# icu_frac <- 0.2964 #8-19-2020
 # icu_frac <- 0.24198 #8-19-2020
 
 # icu_frac <- 2.380952 #~42 percent of patients in the ICU die #8-14-2020 - https://www.healthline.com/health-news/covid-19-mortality-is-going-down-in-icus-what-this-means-for-the-pandemic#The-mortality-rate-is-dropping,-but-its-still-high

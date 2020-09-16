@@ -35,6 +35,11 @@ tableDat <- tibble(State = countyDat$state, County = countyDat$county, Date = co
                    "80% CI" = paste0(round(countyDat$perc_icu_occ - 0.585*countyDat$perc_icu_occ,digits = 2), "-", 
                                                    round(countyDat$perc_icu_occ + 0.585*countyDat$perc_icu_occ,digits = 2),"%"))
 plotTableDat <- tableDat
+
+# Table for hospitalization and ICU parameters
+parameterTableDat <- tibble(`Date Updated` = as.Date(c("2020-09-15","2020-08-15","2020-06-10")), `Hospitalization Rate` = c(0.0558,0.0826,0.1270), `ICU Rate` = c(0.22908,0.2964,0.4000),
+                            `Parameter Range Start` = as.Date(c("2020-07-25","2020-06-28","2020-03-07")), `Parameter Range End` = as.Date(c("2020-09-04","2020-08-08","2020-05-30")))
+
 ######
 # Add state data to the county data
 stateDatAdd <- tibble(date = stateDat$date, county = paste0(stateDat$state," State"), state = stateDat$state, fips = NA, cases = stateDat$cases, deaths = stateDat$deaths,
@@ -130,14 +135,13 @@ ui = fluidPage( style='margin-left:5px; margin-right:5px', title="COVID-19 Count
                      fluidRow(div( class="col-xs-12 col-md-offset-2 col-md-8 col-lg-offset-3 col-lg-6",
                                    HTML("<hr style='padding:0px; margin:0px'>")
                      )),  
-                     
                      h4(class="text-center", "COVID-19 cases across all 3,142 counties in the United States" ),
-                     p( class="text-center", style="font-size:1.1em", 
+                     p( class="text-center", style="font-size:1.1em; max-width: 1000px; margin: auto", 
                         "COVID-19 is rapidly spreading across the United States, but at different rates and intensities.  Medical professionals, leaders, and policy makers should have the most up-to-date information about cases and growth trends in their local region.  The ",
                         a(href="http://buttelab.ucsf.edu/", "Butte Lab",inline = T, target = "_blank"), " at UCSF has partnered with ", 
                         a(href="https://twitter.com/pbleic?s=20", "Paul Bleicher",inline = T, target = "_blank"),
                         "MD, PhD, former CEO of OptumLabs, to calculate and visualize COVID-19 statistics for every county in the United States. Use the tools below to view the most recent data for any region. This project is open source and we welcome ", 
-                        a(href="www/volunteers.html", "volunteers (both technical and non-technical).",inline = T, target = "_blank"), " For questons and feedback, please ",
+                        a(href="www/volunteers.html", "volunteers (both technical and non-technical)",inline = T, target = "_blank"), " to help keep our resource up to date. For questons and feedback, please ",
                         a(href="mailto:covid.tracker@bakar.institute", "contact us.",inline = T, target = "_blank") )#,
                      #p(tags$small(" .")) # vertical white space
                 ),
@@ -265,8 +269,8 @@ ui = fluidPage( style='margin-left:5px; margin-right:5px', title="COVID-19 Count
                 #  Confidence Interval Table
                 ######################################################################
                 div( class="container-fluid",
-                     div(DT::dataTableOutput("CITable")), #8-20-2020
-                     p( style="margin-bottom:0px; padding-bottom:0px", tags$small("."))
+                     div(DT::dataTableOutput("CITable"), style="max-width: 1000px; margin: auto"), #8-20-2020
+                     p( style="margin-bottom:0px; padding-bottom:0px; max-width: 1000px", tags$small("."))
                 ), # ends "CITable" from "Confidence Interval Table" section
                 #fluidRow(p(tags$small(".")) ), #creates a tiny amount of vertical space
                 
@@ -346,20 +350,43 @@ ui = fluidPage( style='margin-left:5px; margin-right:5px', title="COVID-19 Count
                 #),
                 
                 ######################################################################
+                #  Hospitalization and ICU Parameter Table
+                ######################################################################
+                div( class="container-fluid",
+                     p( class="text-center", style="font-size:1.1em; max-width: 1000px; margin: auto", 
+                        "The COVID-19 testing and hospitalization landscape is constantly evolving. In order to keep our estimated % ICU beds needed model accurate and 
+                        up to date, we will periodically update the underlying parameters. Changing these parameters impacts model performance for dates prior to the range for 
+                        which the parameters are estimated. However, we believe that it is most imporantant from a policymaking standpoint to understand the current demands on 
+                        healthcare resources and thus compromise on accuracy for the earlier dates of the pandemic. To keep a record of how these parameters have changed 
+                        over the course of the pandemic and inform on the accuracy of the earlier predictions, we provide a history of the parameters used on covidcounties. 
+                        The parameters currently being used are highlighted in yellow."
+                        ),
+                     div(DT::dataTableOutput("ParameterTable"), style="max-width: 1000px; margin: auto"), #9-15-2020
+                     p( style="margin-bottom:0px; padding-bottom:0px; max-width: 1000px", tags$small("."))
+                ), # ends "ParameterTable"
+                #fluidRow(p(tags$small(".")) ), #creates a tiny amount of vertical space
+                
+                ######################################################################
                 #  Footer Info
                 ######################################################################
                 
-                #div( #class="jumbotron", style="background-color: white; padding: .4em",
+                
+                # div( class="jumbotron", style="background-color: white; padding: .4em",
+                
+                div(class = "container", sytle="max-width: 2000px; margin: 0 auto; display: block;",
                 
                 # Video Tutorial
-                HTML( "<div class='col-xs-offset-0 col-xs-12 col-sm-offset-0 col-sm-6 col-md-6 col-lg-5'>
+                # HTML( "<div style='max-width: 700px; margin: auto;' class='col-xs-offset-0 col-xs-12 col-sm-offset-0 col-sm-6 col-md-6 col-lg-5'>
+                HTML( "<div style='max-width: 700px; margin: 0 auto; display: block;' class='col-xs-12 col-md-6 col-lg-6'>
                         <h3 class='text-center'>Tutorial</h3>
                         <div class='embed-responsive embed-responsive-16by9'>
-                          <iframe class='embed-responsive-item'
-                          src='https://www.youtube.com/embed/5OHDSpLv1kY'></iframe></div>
+                          <iframe style='max-width: 650px; margin: auto;' class='embed-responsive-item'
+                          src='https://www.youtube.com/embed/5OHDSpLv1kY'></iframe>
+                          </div>
                         </div>"),
                 
-                div(  class='col-xs-12 col-sm-6 col-md-6',
+                # div( style='max-width: 700px; margin: auto;', class='col-xs-12 col-sm-6 col-md-6 col-lg-6',
+                div( style='max-width: 700px; margin: 0 auto; display: block;', class='col-xs-12 col-md-6 col-lg-6',
                       ### Data Sources
                       h3( class="text-center", "Acknowledgements" ), # class="text-center",
                       p(class="text-left",  "State and county infection data: ",
@@ -397,11 +424,13 @@ ui = fluidPage( style='margin-left:5px; margin-right:5px', title="COVID-19 Count
                       ))
                 ),
                 
-                div( class="col-xs-12 col-sm-6 col-md-6 col-lg-5",
+                # div(style='max-width: 700px; margin: auto;', class="col-xs-12 col-sm-6 col-md-6 col-lg-6",
+                div(style='max-width: 700px; margin: 0 auto; display: block;', class="col-xs-12 col-md-6 col-lg-6",
                      img(src='www/bakar_logo.png', class="img-responsive")
                 ),
                 #),
-                
+                ),
+
                 fluidRow(class="jumbotron", style="background-color: white", HTML("<h1>&nbsp</h1>") ),
                 
                 ######################################################################
@@ -429,6 +458,23 @@ ui = fluidPage( style='margin-left:5px; margin-right:5px', title="COVID-19 Count
 ### Timeout
 
 server = function(input, output, session) {
+  
+  # Data table for ICU and hospitalization parmaters 9-15-2020
+  output$ParameterTable <- DT::renderDataTable({
+    datatable(parameterTableDat, filter = 'none', #remove column filter
+              options = list(
+                pageLength = 5,
+                dom = 't', #remove searchbar
+                autoWidth = FALSE),
+              rownames = FALSE
+    )%>% 
+      formatPercentage(c("Hospitalization Rate","ICU Rate"), 2) %>%
+      formatStyle(
+        'Date Updated',
+        target = 'row',
+        backgroundColor = styleEqual(as.Date('2020-09-15'), c('yellow'))
+      )
+  })
   
   # Data table for confidence interval 8-20-2020
   observeEvent(input$uPlot, {
@@ -1421,7 +1467,7 @@ server = function(input, output, session) {
     # Creat little message under graph that (usually) talks about doubling time
     output$doubling_time = renderText({ 
       if( input$uPlot == "ICUbeds" ){
-        paste("Estimations assume a 8.26% hospitalization rate, 29.6% ICU rate")
+        paste("Estimations assume a 5.58% hospitalization rate, 22.9% ICU rate")
       }else{
         paste('Fastest doubling time in state is ',fastest_dbl$county,': ',as.character(round(fastest_dbl$cur_double)), 'days')         
       }
