@@ -38,7 +38,7 @@ plotTableDat <- tableDat
 
 # Table for hospitalization and ICU parameters
 parameterTableDat <- tibble(`Date Updated` = as.Date(c("2020-09-15","2020-08-15","2020-06-10")), `Hospitalization Rate` = c(0.0558,0.0826,0.1270), `ICU Rate` = c(0.22908,0.2964,0.4000),
-                            `Parameter Range Start` = as.Date(c("2020-07-25","2020-06-28","2020-03-07")), `Parameter Range End` = as.Date(c("2020-09-04","2020-08-08","2020-05-30")))
+                            `Parameter Estimation Range Start` = as.Date(c("2020-07-25","2020-06-28","2020-03-07")), `Parameter Estimation Range End` = as.Date(c("2020-09-04","2020-08-08","2020-05-30")))
 
 ######
 # Add state data to the county data
@@ -1028,55 +1028,55 @@ server = function(input, output, session) {
   plotVarsUSmap <- reactive({
     if( input$uEvents == "default" ){
       if(input$uPlot == "cases" & input$uScale == "true" ){
-        plotVar = "casesPerMillion"; annoTitle = paste0("Cumulative Cases Per Million by State from: ",format(input$daterange1[1], "%m/%d")," - ",format(input$daterange1[2], "%m/%d"))
+        plotVar = "casesPerMillion"; annoTitle = paste0("Cumulative Cases Per Million by State from: ",format(input$daterange1[1], "%m/%d/%Y")," - ",format(input$daterange1[2], "%m/%d/%Y")) #10-8-2020
         annoSubtitle = "(high number of cases - orange; low number of cases - white)" #4-7-2-20
       }
       if(input$uPlot == "cases" & input$uScale == "false"){
-        plotVar = "cases"; annoTitle = paste0("Cumulative Cases by State from: ",format(input$daterange1[1], "%m/%d")," - ",format(input$daterange1[2], "%m/%d"))
+        plotVar = "cases"; annoTitle = paste0("Cumulative Cases by State from: ",format(input$daterange1[1], "%m/%d/%Y")," - ",format(input$daterange1[2], "%m/%d/%Y")) #10-8-2020
         annoSubtitle = "(high number of cases - orange; low number of cases - white)" #4-7-2-20
       }
       if(input$uPlot == "nCases" & input$uScale == "true"){
-        plotVar = "NewCasesPerMillion"; annoTitle = paste0("New Cases Per Million by State on: ",format(input$daterange1[2], "%m/%d"))
+        plotVar = "NewCasesPerMillion"; annoTitle = paste0("New Cases Per Million by State on: ",format(input$daterange1[2], "%m/%d/%Y")) #10-8-2020
         annoSubtitle = "(high number of cases - orange; low number of cases - white)" #4-7-2-20
       }
       if(input$uPlot == "nCases" & input$uScale == "false" ){
-        plotVar = "NewCases"; annoTitle = paste0("New Cases by State on: ",format(input$daterange1[2], "%m/%d"))
+        plotVar = "NewCases"; annoTitle = paste0("New Cases by State on: ",format(input$daterange1[2], "%m/%d/%Y")) #10-8-2020
         annoSubtitle = "(high number of cases - orange; low number of cases - white)" #4-7-2-20
       }
       if(input$uPlot == "deaths" & input$uScale == "true"){
-        plotVar = "deathsPerMillion"; annoTitle = paste0("Cumulative Deaths Per Million by State from: ",format(input$daterange1[1], "%m/%d")," - ",format(input$daterange1[2], "%m/%d"))
+        plotVar = "deathsPerMillion"; annoTitle = paste0("Cumulative Deaths Per Million by State from: ",format(input$daterange1[1], "%m/%d/%Y")," - ",format(input$daterange1[2], "%m/%d/%Y")) #10-8-2020
         annoSubtitle = "(high number of deaths - orange; low number of deaths - white)" #4-7-2-20
       }
       if(input$uPlot == "deaths" & input$uScale == "false" ){
-        plotVar = "deaths"; annoTitle = paste0("Cumulative Deaths by State from: ",format(input$daterange1[1], "%m/%d")," - ",format(input$daterange1[2], "%m/%d"))
+        plotVar = "deaths"; annoTitle = paste0("Cumulative Deaths by State from: ",format(input$daterange1[1], "%m/%d/%Y")," - ",format(input$daterange1[2], "%m/%d/%Y")) #10-8-2020
         annoSubtitle = "(high number of deaths - orange; low number of deaths - white)" #4-7-2-20
       }
       if(input$uPlot == "nDeaths" & input$uScale == "true"){
-        plotVar = "NewDeathsPerMillion"; annoTitle = paste0("New Deaths Per Million by State on: ",format(input$daterange1[2], "%m/%d"))
+        plotVar = "NewDeathsPerMillion"; annoTitle = paste0("New Deaths Per Million by State on: ",format(input$daterange1[2], "%m/%d/%Y")) #10-8-2020
         annoSubtitle = "(high number of deaths - orange; low number of deaths - white)" #4-7-2-20
       }
       if(input$uPlot == "nDeaths" & input$uScale == "false" ){
-        plotVar = "NewDeaths"; annoTitle = paste0("New Deaths by State on: ",format(input$daterange1[2], "%m/%d"))
+        plotVar = "NewDeaths"; annoTitle = paste0("New Deaths by State on: ",format(input$daterange1[2], "%m/%d/%Y")) #10-8-2020
         annoSubtitle = "(high number of deaths - orange; low number of deaths - white)" #4-7-2-20
       }
       ##TRAVIS ZACK added for doubling time graph
       if(input$uPlot == "loessN" & input$uScale == "false" ){
-        plotVar = "loessN"; annoTitle = paste0("Case Doubling Time by State on: ",format(input$daterange1[2], "%m/%d"))
+        plotVar = "loessN"; annoTitle = paste0("Case Doubling Time by State on: ",format(input$daterange1[2], "%m/%d/%Y")) #10-8-2020
         annoSubtitle = "(low doubling time - orange; high doubling time - white)" #4-7-2-20
       }
       ##TRAVIS ZACK added for doubling time graph
       if(input$uPlot == "loessN" & input$uScale == "true"){
-        plotVar = "loessN"; annoTitle = paste0("Case Doubling Time by State on: ",format(input$daterange1[2], "%m/%d"))
+        plotVar = "loessN"; annoTitle = paste0("Case Doubling Time by State on: ",format(input$daterange1[2], "%m/%d/%Y")) #10-8-2020
         annoSubtitle = "(low doubling time - orange; high doubling time - white)" #4-7-2-20
       }
       ##TRAVIS ZACK added for ICU time graph
       if(input$uPlot == "ICUbeds" & input$uScale == "false"){
-        plotVar = "perc_icu_occ"; annoTitle = paste0("Estimated Percent ICU Beds Needed by State on: ",format(input$daterange1[2], "%m/%d"))
+        plotVar = "perc_icu_occ"; annoTitle = paste0("Estimated Percent ICU Beds Needed by State on: ",format(input$daterange1[2], "%m/%d/%Y")) #10-8-2020
         annoSubtitle = "(high fraction of estimated ICU beds needed - orange; low fraction - white)" #4-7-2-20
       }
       ##TRAVIS ZACK added for ICU time graph
       if(input$uPlot == "ICUbeds" & input$uScale == "true" ){
-        plotVar = "perc_icu_occ"; annoTitle = paste0("Estimated Percent ICU Beds Needed by State on: ",format(input$daterange1[2], "%m/%d"))
+        plotVar = "perc_icu_occ"; annoTitle = paste0("Estimated Percent ICU Beds Needed by State on: ",format(input$daterange1[2], "%m/%d/%Y")) #10-8-2020
         annoSubtitle = "(high fraction of estimated ICU beds needed - orange; low fraction - white)" #4-7-2-20
       }
     }
@@ -1090,22 +1090,22 @@ server = function(input, output, session) {
     # }
     if(input$uEvents == "soe"){
       plotVar = "SE"
-      annoTitle = paste0("State Declared State of Emergency\nFirst Date: ",format(min(as.Date(stateDat$SE),na.rm = T), "%m/%d"))
+      annoTitle = paste0("State Declared State of Emergency\nFirst Date: ",format(min(as.Date(stateDat$SE),na.rm = T), "%m/%d/%Y")) #10-8-2020
       annoSubtitle = "(later date - orange; earlier date - white)" #4-7-2-20
     }
     if(input$uEvents == "cs"){
       plotVar = "CS"
-      annoTitle = paste0("State Mandated Closure of Public Schools\nFirst Date: ",format(min(as.Date(stateDat$CS),na.rm = T), "%m/%d"))
+      annoTitle = paste0("State Mandated Closure of Public Schools\nFirst Date: ",format(min(as.Date(stateDat$CS),na.rm = T), "%m/%d/%Y")) #10-8-2020
       annoSubtitle = "(later date - orange; earlier date - white)" #4-7-2-20
     }
     if(input$uEvents == "sip"){
       plotVar = "SIP"
-      annoTitle = paste0("State Mandated Shelter in Place\nFirst Date: ",format(min(as.Date(stateDat$SIP),na.rm = T), "%m/%d"))
+      annoTitle = paste0("State Mandated Shelter in Place\nFirst Date: ",format(min(as.Date(stateDat$SIP),na.rm = T), "%m/%d/%Y")) #10-8-2020
       annoSubtitle = "(later date - orange; earlier date - white)" #4-7-2-20
     }
     if(input$uEvents == "rb"){
       plotVar = "RB"
-      annoTitle = paste0("State Mandated Closure of Restaurants/Bars\nFirst Date: ",format(min(as.Date(stateDat$RB),na.rm = T), "%m/%d"))
+      annoTitle = paste0("State Mandated Closure of Restaurants/Bars\nFirst Date: ",format(min(as.Date(stateDat$RB),na.rm = T), "%m/%d/%Y")) #10-8-2020
       annoSubtitle = "(later date - orange; earlier date - white)" #4-7-2-20
     }
     #}
@@ -1218,55 +1218,55 @@ server = function(input, output, session) {
     
     if(input$uPlot == "cases" & input$uScale == "true"){
       plotVar = "casesPerMillion"
-      annoTitle = paste0("Cumulative Cases Per Million by ",input$cState," County from: ",format(input$daterange1[1], "%m/%d")," - ",format(input$daterange1[2], "%m/%d") )
+      annoTitle = paste0("Cumulative Cases Per Million by ",input$cState," County from: ",format(input$daterange1[1], "%m/%d/%Y")," - ",format(input$daterange1[2], "%m/%d/%Y") ) #10-8-2020
     }
     if(input$uPlot == "cases" & input$uScale == "false"){
       plotVar = "cases"
-      annoTitle = paste0("Cumulative Cases by ",input$cState," County from: ",format(input$daterange1[1], "%m/%d")," - ",format(input$daterange1[2], "%m/%d") )
+      annoTitle = paste0("Cumulative Cases by ",input$cState," County from: ",format(input$daterange1[1], "%m/%d/%Y")," - ",format(input$daterange1[2], "%m/%d/%Y") ) #10-8-2020
     }
     if(input$uPlot == "nCases" & input$uScale == "true"){
       plotVar = "NewCasesPerMillion"
-      annoTitle = paste0("New Cases Per Million by ",input$cState," County on: ",format(input$daterange1[2], "%m/%d") )
+      annoTitle = paste0("New Cases Per Million by ",input$cState," County on: ",format(input$daterange1[2], "%m/%d/%Y") ) #10-8-2020
     }
     if(input$uPlot == "nCases" & input$uScale == "false"){
       plotVar = "NewCases"
-      annoTitle = paste0("New Cases by ",input$cState," County on: ",format(input$daterange1[2], "%m/%d") )
+      annoTitle = paste0("New Cases by ",input$cState," County on: ",format(input$daterange1[2], "%m/%d/%Y") ) #10-8-2020
     }
     if(input$uPlot == "deaths" & input$uScale == "true"){
       plotVar = "deathsPerMillion"
-      annoTitle = paste0("Cumulative Deaths Per Million by ",input$cState," County from: ",format(input$daterange1[1], "%m/%d")," - ",format(input$daterange1[2], "%m/%d") )
+      annoTitle = paste0("Cumulative Deaths Per Million by ",input$cState," County from: ",format(input$daterange1[1], "%m/%d/%Y")," - ",format(input$daterange1[2], "%m/%d/%Y") ) #10-8-2020
     }
     if(input$uPlot == "deaths" & input$uScale == "false"){
       plotVar = "deaths"
-      annoTitle = paste0("Cumulative Deaths by ",input$cState," County from: ",format(input$daterange1[1], "%m/%d")," - ",format(input$daterange1[2], "%m/%d") )
+      annoTitle = paste0("Cumulative Deaths by ",input$cState," County from: ",format(input$daterange1[1], "%m/%d/%Y")," - ",format(input$daterange1[2], "%m/%d/%Y") ) #10-8-2020
     }
     if(input$uPlot == "nDeaths" & input$uScale == "true"){
       plotVar = "NewDeathsPerMillion"
-      annoTitle = paste0("New Deaths Per Million by ",input$cState," County on: ",format(input$daterange1[2], "%m/%d") )
+      annoTitle = paste0("New Deaths Per Million by ",input$cState," County on: ",format(input$daterange1[2], "%m/%d/%Y") ) #10-8-2020
     }
     if(input$uPlot == "nDeaths" & input$uScale == "false"){
       plotVar = "NewDeaths"
-      annoTitle = paste0("New Deaths by ",input$cState," County on: ",format(input$daterange1[2], "%m/%d") )
+      annoTitle = paste0("New Deaths by ",input$cState," County on: ",format(input$daterange1[2], "%m/%d/%Y") ) #10-8-2020
     }
     ##Doug added for doubling time graph (based on Travis's code)
     if(input$uPlot == "loessN" & input$uScale == "false"){
       plotVar = "loessN"
-      annoTitle = paste0("Case Doubling Time by ",input$cState," County: ",format(input$daterange1[2], "%m/%d") )
+      annoTitle = paste0("Case Doubling Time by ",input$cState," County: ",format(input$daterange1[2], "%m/%d/%Y") ) #10-8-2020
     }
     ##Doug added for doubling time graph (based on Travis's code)
     if(input$uPlot == "loessN" & input$uScale == "true"){
       plotVar = "loessN"
-      annoTitle = paste0("Case Doubling Time by ",input$cState," County: ",format(input$daterange1[2], "%m/%d") )
+      annoTitle = paste0("Case Doubling Time by ",input$cState," County: ",format(input$daterange1[2], "%m/%d/%Y") ) #10-8-2020
     }
     ##TRAVIS ZACK added for ICU time graph
     if(input$uPlot == "ICUbeds" & input$uScale == "false"){
       plotVar = "perc_icu_occ"
-      annoTitle = paste0("Estimated Percent ICU Beds Needed by ",input$cState," County: ",format(input$daterange1[2], "%m/%d") )
+      annoTitle = paste0("Estimated Percent ICU Beds Needed by ",input$cState," County: ",format(input$daterange1[2], "%m/%d/%Y") ) #10-8-2020
     }
     ##TRAVIS ZACK added for ICU time graph
     if(input$uPlot == "ICUbeds" & input$uScale == "true"){
       plotVar = "perc_icu_occ"
-      annoTitle = paste0("Estimated Percent ICU Beds Needed by ",input$cState," County: ",format(input$daterange1[2], "%m/%d") )
+      annoTitle = paste0("Estimated Percent ICU Beds Needed by ",input$cState," County: ",format(input$daterange1[2], "%m/%d/%Y") ) #10-8-2020
     }
     
     # Return a list based on the selected parameters
@@ -1523,46 +1523,46 @@ server = function(input, output, session) {
             add_segments(inherit = FALSE, x = csDate, xend = csDate,
                          y = minVal, yend = maxVal, showlegend=FALSE, line=list(color = 'rgba(0,0,0,1)', dash = 'dash'), hoverinfo = 'text',
                          hovertext = paste0('</br>State: ', input$cState,
-                                            "</br>School Closure: ",format(csDate, "%m/%d"),
-                                            "</br>Restuarant/Bar Closure: ",format(rbDate, "%m/%d"))) %>%
+                                            "</br>School Closure: ",format(csDate, "%m/%d/%Y"), #10-8-2020
+                                            "</br>Restuarant/Bar Closure: ",format(rbDate, "%m/%d/%Y"))) %>% #10-8-2020
             add_text(inherit = FALSE, x = csDate, y = maxVal, text = "CS,R/B", textposition = "top middle", showlegend=FALSE, hoverinfo = 'text',
                      hovertext = paste0('</br>State: ', input$cState,
-                                        "</br>School Closure: ",format(csDate, "%m/%d"),
-                                        "</br>Restuarant/Bar Closure: ",format(rbDate, "%m/%d")))
+                                        "</br>School Closure: ",format(csDate, "%m/%d/%Y"), #10-8-2020
+                                        "</br>Restuarant/Bar Closure: ",format(rbDate, "%m/%d/%Y"))) #10-8-2020
         } else{
           if(csDate == seDate & !is.na(csDate) & !is.na(seDate)){
             p1 <- p1 %>%
               add_segments(inherit = FALSE, x = csDate, xend = csDate,
                            y = minVal, yend = maxVal, showlegend=FALSE, line=list(color = 'rgba(0,0,0,1)', dash = 'dash'), hoverinfo = 'text',
                            hovertext = paste0('</br>State: ', input$cState,
-                                              "</br>School Closure: ",format(csDate, "%m/%d"),
-                                              "</br>State of Emergency: ",format(seDate, "%m/%d"))) %>%
+                                              "</br>School Closure: ",format(csDate, "%m/%d/%Y"), #10-8-2020
+                                              "</br>State of Emergency: ",format(seDate, "%m/%d/%Y"))) %>% #10-8-2020
               add_text(inherit = FALSE, x = csDate, y = maxVal, text = "CS,SoE", textposition = "top middle", showlegend=FALSE, hoverinfo = 'text',
                        hovertext = paste0('</br>State: ', input$cState,
-                                          "</br>School Closure: ",format(csDate, "%m/%d"),
-                                          "</br>State of Emergency: ",format(seDate, "%m/%d")))
+                                          "</br>School Closure: ",format(csDate, "%m/%d/%Y"), #10-8-2020
+                                          "</br>State of Emergency: ",format(seDate, "%m/%d/%Y"))) #10-8-2020
           } else{
             if(csDate == sipDate & !is.na(csDate) & !is.na(sipDate)){
               p1 <- p1 %>%
                 add_segments(inherit = FALSE, x = csDate, xend = csDate,
                              y = minVal, yend = maxVal, showlegend=FALSE, line=list(color = 'rgba(0,0,0,1)', dash = 'dash'), hoverinfo = 'text',
                              hovertext = paste0('</br>State: ', input$cState,
-                                                "</br>School Closure: ",format(csDate, "%m/%d"),
-                                                "</br>Shelter in Place: ",format(sipDate, "%m/%d"))) %>%
+                                                "</br>School Closure: ",format(csDate, "%m/%d/%Y"), #10-8-2020
+                                                "</br>Shelter in Place: ",format(sipDate, "%m/%d/%Y"))) %>% #10-8-2020
                 add_text(inherit = FALSE, x = csDate, y = maxVal, text = "CS,SiP", textposition = "top middle", showlegend=FALSE, hoverinfo = 'text',
                          hovertext = paste0('</br>State: ', input$cState,
-                                            "</br>School Closure: ",format(csDate, "%m/%d"),
-                                            "</br>Shelter in Place: ",format(sipDate, "%m/%d")))
+                                            "</br>School Closure: ",format(csDate, "%m/%d/%Y"), #10-8-2020
+                                            "</br>Shelter in Place: ",format(sipDate, "%m/%d/%Y"))) #10-8-2020
             } else{
               if(!is.na(csDate)){
                 p1 <- p1 %>%
                   add_segments(inherit = FALSE, x = csDate, xend = csDate,
                                y = minVal, yend = maxVal, showlegend=FALSE, line=list(color = 'rgba(0,0,0,1)', dash = 'dash'), hoverinfo = 'text',
                                hovertext = paste0('</br>State: ', input$cState,
-                                                  "</br>School Closure: ",format(csDate, "%m/%d"))) %>%
+                                                  "</br>School Closure: ",format(csDate, "%m/%d/%Y"))) %>% #10-8-2020
                   add_text(inherit = FALSE, x = csDate, y = maxVal, text = "CS", textposition = "top middle", showlegend=FALSE, hoverinfo = 'text',
                            hovertext = paste0('</br>State: ', input$cState,
-                                              "</br>School Closure: ",format(csDate, "%m/%d")))
+                                              "</br>School Closure: ",format(csDate, "%m/%d/%Y"))) #10-8-2020
               }
             }
           }
@@ -1573,34 +1573,34 @@ server = function(input, output, session) {
             add_segments(inherit = FALSE, x = rbDate, xend = rbDate,
                          y = minVal, yend = maxVal, showlegend=FALSE, line=list(color = 'rgba(0,0,0,1)', dash = 'dash'), hoverinfo = 'text',
                          hovertext = paste0('</br>State: ', input$cState,
-                                            "</br>Restuarant/Bar Closure: ",format(rbDate, "%m/%d"),
-                                            "</br>State of Emergency: ",format(seDate, "%m/%d"))) %>%
+                                            "</br>Restuarant/Bar Closure: ",format(rbDate, "%m/%d/%Y"), #10-8-2020
+                                            "</br>State of Emergency: ",format(seDate, "%m/%d/%Y"))) %>% #10-8-2020
             add_text(inherit = FALSE, x = rbDate, y = maxVal, text = "R/B,SoE", textposition = "top middle", showlegend=FALSE, hoverinfo = 'text',
                      hovertext = paste0('</br>State: ', input$cState,
-                                        "</br>Restuarant/Bar Closure: ",format(rbDate, "%m/%d"),
-                                        "</br>State of Emergency: ",format(seDate, "%m/%d")))
+                                        "</br>Restuarant/Bar Closure: ",format(rbDate, "%m/%d/%Y"), #10-8-2020
+                                        "</br>State of Emergency: ",format(seDate, "%m/%d/%Y"))) #10-8-2020
         } else{
           if(rbDate == sipDate & !is.na(rbDate) & !is.na(sipDate)){
             p1 <- p1 %>%
               add_segments(inherit = FALSE, x = rbDate, xend = rbDate,
                            y = minVal, yend = maxVal, showlegend=FALSE, line=list(color = 'rgba(0,0,0,1)', dash = 'dash'), hoverinfo = 'text',
                            hovertext = paste0('</br>State: ', input$cState,
-                                              "</br>Restuarant/Bar Closure: ",format(rbDate, "%m/%d"),
-                                              "</br>Shelter in Place: ",format(sipDate, "%m/%d"))) %>%
+                                              "</br>Restuarant/Bar Closure: ",format(rbDate, "%m/%d/%Y"), #10-8-2020
+                                              "</br>Shelter in Place: ",format(sipDate, "%m/%d/%Y"))) %>% #10-8-2020
               add_text(inherit = FALSE, x = rbDate, y = maxVal, text = "R/B,SiP", textposition = "top middle", showlegend=FALSE, hoverinfo = 'text',
                        hovertext = paste0('</br>State: ', input$cState,
-                                          "</br>Restuarant/Bar Closure: ",format(rbDate, "%m/%d"),
-                                          "</br>Shelter in Place: ",format(sipDate, "%m/%d")))
+                                          "</br>Restuarant/Bar Closure: ",format(rbDate, "%m/%d/%Y"), #10-8-2020
+                                          "</br>Shelter in Place: ",format(sipDate, "%m/%d/%Y"))) #10-8-2020
           } else{
             if(rbDate != csDate & !is.na(rbDate)){
               p1 <- p1 %>%
                 add_segments(inherit = FALSE, x = rbDate, xend = rbDate,
                              y = minVal, yend = maxVal, showlegend=FALSE, line=list(color = 'rgba(0,0,0,1)', dash = 'dash'), hoverinfo = 'text',
                              hovertext = paste0('</br>State: ', input$cState,
-                                                "</br>Restuarant/Bar Closure: ",format(rbDate, "%m/%d"))) %>%
+                                                "</br>Restuarant/Bar Closure: ",format(rbDate, "%m/%d/%Y"))) %>% #10-8-2020
                 add_text(inherit = FALSE, x = rbDate, y = maxVal, text = "R/B", textposition = "top middle", showlegend=FALSE, hoverinfo = 'text',
                          hovertext = paste0('</br>State: ', input$cState,
-                                            "</br>Restuarant/Bar Closure: ",format(rbDate, "%m/%d")))
+                                            "</br>Restuarant/Bar Closure: ",format(rbDate, "%m/%d/%Y"))) #10-8-2020
             }
           }
         } 
@@ -1610,22 +1610,22 @@ server = function(input, output, session) {
             add_segments(inherit = FALSE, x = seDate, xend = seDate,
                          y = minVal, yend = maxVal, showlegend=FALSE, line=list(color = 'rgba(0,0,0,1)', dash = 'dash'), hoverinfo = 'text',
                          hovertext = paste0('</br>State: ', input$cState,
-                                            "</br>State of Emergency: ",format(seDate, "%m/%d"),
-                                            "</br>Shelter in Place: ",format(sipDate, "%m/%d"))) %>%
+                                            "</br>State of Emergency: ",format(seDate, "%m/%d/%Y"), #10-8-2020
+                                            "</br>Shelter in Place: ",format(sipDate, "%m/%d/%Y"))) %>% #10-8-2020
             add_text(inherit = FALSE, x = seDate, y = maxVal, text = "SoE,SiP", textposition = "top middle", showlegend=FALSE, hoverinfo = 'text',
                      hovertext = paste0('</br>State: ', input$cState,
-                                        "</br>State of Emergency: ",format(seDate, "%m/%d"),
-                                        "</br>Shelter in Place: ",format(sipDate, "%m/%d")))
+                                        "</br>State of Emergency: ",format(seDate, "%m/%d/%Y"), #10-8-2020
+                                        "</br>Shelter in Place: ",format(sipDate, "%m/%d/%Y"))) #10-8-2020
         } else{
           if(seDate != csDate & seDate != rbDate & !is.na(seDate)){
             p1 <- p1 %>%
               add_segments(inherit = FALSE, x = seDate, xend = seDate,
                            y = minVal, yend = maxVal, showlegend=FALSE, line=list(color = 'rgba(0,0,0,1)', dash = 'dash'), hoverinfo = 'text',
                            hovertext = paste0('</br>State: ', input$cState,
-                                              "</br>State of Emergency: ",format(seDate, "%m/%d"))) %>%
+                                              "</br>State of Emergency: ",format(seDate, "%m/%d/%Y"))) %>% #10-8-2020
               add_text(inherit = FALSE, x = seDate, y = maxVal, text = "SoE", textposition = "top middle", showlegend=FALSE, hoverinfo = 'text',
                        hovertext = paste0('</br>State: ', input$cState,
-                                          "</br>State of Emergency: ",format(seDate, "%m/%d")))
+                                          "</br>State of Emergency: ",format(seDate, "%m/%d/%Y"))) #10-8-2020
           }
         }
         
@@ -1634,10 +1634,10 @@ server = function(input, output, session) {
             add_segments(inherit = FALSE, x = sipDate, xend = sipDate,
                          y = minVal, yend = maxVal, showlegend=FALSE, line=list(color = 'rgba(0,0,0,1)', dash = 'dash'), hoverinfo = 'text',
                          hovertext = paste0('</br>State: ', input$cState,
-                                            "</br>Shelter in Place: ",format(sipDate, "%m/%d"))) %>%
+                                            "</br>Shelter in Place: ",format(sipDate, "%m/%d/%Y"))) %>% #10-8-2020
             add_text(inherit = FALSE, x = unique(pull(stateDat[which(stateDat$state == input$cState),"SIP"])), y = maxVal, text = "SiP", textposition = "top middle", showlegend=FALSE, hoverinfo = 'text',
                      hovertext = paste0('</br>State: ', input$cState,
-                                        "</br>Shelter in Place: ",format(sipDate, "%m/%d")))
+                                        "</br>Shelter in Place: ",format(sipDate, "%m/%d/%Y"))) #10-8-2020
         }
         
       }
@@ -1726,22 +1726,22 @@ server = function(input, output, session) {
                      hoverinfo = "text",
                      hoveron = "fills",
                      text = ~paste0('</br>State: ', str_to_title(state_name),
-                                    "</br>Doubling time (",format(defaultDate2, "%m/%d"),"): ", format(round(loessN, digits = 1),big.mark=",",scientific=FALSE), " days",
+                                    "</br>Doubling time (",format(defaultDate2, "%m/%d/%Y"),"): ", format(round(loessN, digits = 1),big.mark=",",scientific=FALSE), " days", #10-8-2020
                                     '</br>Total ICU Beds: ', format(round(ICUbeds, digits = 1),big.mark=",",scientific=FALSE),
-                                    '</br>Estimated ICU Beds Needed (',format(defaultDate2, "%m/%d"),"): ", format(round(icu_bed_occ, digits = 1),big.mark=",",scientific=FALSE),
-                                    '</br>Fraction ICU Beds Needed (',format(defaultDate2, "%m/%d"),"): ", format(round(perc_icu_occ, digits = 1),big.mark=",",scientific=FALSE), "%",
-                                    '</br>Cases (', format(defaultDate1, "%m/%d"), ' - ', format(defaultDate2, "%m/%d"), '): ', format(cases,big.mark=",",scientific=FALSE),
-                                    "</br>Deaths (",format(defaultDate1, "%m/%d")," - ",format(defaultDate2, "%m/%d"),"): ", format(deaths,big.mark=",",scientific=FALSE),
-                                    "</br>Cases Per Million (",format(defaultDate1, "%m/%d")," - ",format(defaultDate2, "%m/%d"),"): ", format(round(casesPerMillion, digits = 1),big.mark=",",scientific=FALSE),
-                                    "</br>Deaths Per Million (",format(defaultDate1, "%m/%d")," - ",format(defaultDate2, "%m/%d"),"): ", format(round(deathsPerMillion, digits = 1),big.mark=",",scientific=FALSE),
-                                    "</br>New Cases (",format(defaultDate2, "%m/%d"),"): ", format(NewCases,big.mark=",",scientific=FALSE),
-                                    "</br>New Deaths (",format(defaultDate2, "%m/%d"),"): ", format(NewDeaths,big.mark=",",scientific=FALSE),
-                                    "</br>New Cases Per Million (",format(defaultDate2, "%m/%d"),"): ", format(round(NewCasesPerMillion, digits = 1), big.mark=",",scientific=FALSE),
-                                    "</br>New Deaths Per Million (",format(defaultDate2, "%m/%d"),"): ", format(round(NewDeathsPerMillion, digits = 1), big.mark=",",scientific=FALSE),
-                                    "</br>State of Emergency: ",format(as.Date(SE), "%m/%d"),
-                                    "</br>School Closure: ",format(as.Date(CS), "%m/%d"),
-                                    "</br>Shelter in Place: ",format(as.Date(SIP), "%m/%d"),
-                                    "</br>Bar/Restuarant Closure: ",format(as.Date(RB), "%m/%d")#, #4-7-2-20
+                                    '</br>Estimated ICU Beds Needed (',format(defaultDate2, "%m/%d/%Y"),"): ", format(round(icu_bed_occ, digits = 1),big.mark=",",scientific=FALSE), #10-8-2020
+                                    '</br>Fraction ICU Beds Needed (',format(defaultDate2, "%m/%d/%Y"),"): ", format(round(perc_icu_occ, digits = 1),big.mark=",",scientific=FALSE), "%", #10-8-2020
+                                    '</br>Cases (', format(defaultDate1, "%m/%d/%Y"), ' - ', format(defaultDate2, "%m/%d/%Y"), '): ', format(cases,big.mark=",",scientific=FALSE), #10-8-2020
+                                    "</br>Deaths (",format(defaultDate1, "%m/%d/%Y")," - ",format(defaultDate2, "%m/%d/%Y"),"): ", format(deaths,big.mark=",",scientific=FALSE), #10-8-2020
+                                    "</br>Cases Per Million (",format(defaultDate1, "%m/%d/%Y")," - ",format(defaultDate2, "%m/%d/%Y"),"): ", format(round(casesPerMillion, digits = 1),big.mark=",",scientific=FALSE), #10-8-2020
+                                    "</br>Deaths Per Million (",format(defaultDate1, "%m/%d/%Y")," - ",format(defaultDate2, "%m/%d/%Y"),"): ", format(round(deathsPerMillion, digits = 1),big.mark=",",scientific=FALSE), #10-8-2020
+                                    "</br>New Cases (",format(defaultDate2, "%m/%d/%Y"),"): ", format(NewCases,big.mark=",",scientific=FALSE), #10-8-2020
+                                    "</br>New Deaths (",format(defaultDate2, "%m/%d/%Y"),"): ", format(NewDeaths,big.mark=",",scientific=FALSE), #10-8-2020
+                                    "</br>New Cases Per Million (",format(defaultDate2, "%m/%d/%Y"),"): ", format(round(NewCasesPerMillion, digits = 1), big.mark=",",scientific=FALSE), #10-8-2020
+                                    "</br>New Deaths Per Million (",format(defaultDate2, "%m/%d/%Y"),"): ", format(round(NewDeathsPerMillion, digits = 1), big.mark=",",scientific=FALSE), #10-8-2020
+                                    "</br>State of Emergency: ",format(as.Date(SE), "%m/%d/%Y"), #10-8-2020
+                                    "</br>School Closure: ",format(as.Date(CS), "%m/%d/%Y"), #10-8-2020
+                                    "</br>Shelter in Place: ",format(as.Date(SIP), "%m/%d/%Y"), #10-8-2020
+                                    "</br>Bar/Restuarant Closure: ",format(as.Date(RB), "%m/%d/%Y")#, #4-7-2-20 #10-8-2020
                                     # "</br>Social Distancing: ",format(as.Date(SD), "%m/%d") #4-7-2-20
                      )
               )
@@ -1758,22 +1758,22 @@ server = function(input, output, session) {
                          hoverinfo = "text",
                          hoveron = "fills",
                          text = ~paste0('</br>State: ', str_to_title(state_name),
-                                        "</br>Doubling time (",format(defaultDate2, "%m/%d"),"): ", format(round(loessN, digits = 1),big.mark=",",scientific=FALSE), " days",
+                                        "</br>Doubling time (",format(defaultDate2, "%m/%d/%Y"),"): ", format(round(loessN, digits = 1),big.mark=",",scientific=FALSE), " days", #10-8-2020
                                         '</br>Total ICU Beds: ', format(round(ICUbeds, digits = 1),big.mark=",",scientific=FALSE),
-                                        '</br>Estimated ICU Beds Needed (',format(defaultDate2, "%m/%d"),"): ", format(round(icu_bed_occ, digits = 1),big.mark=",",scientific=FALSE),
-                                        '</br>Fraction ICU Beds Needed (',format(defaultDate2, "%m/%d"),"): ", format(round(perc_icu_occ, digits = 1),big.mark=",",scientific=FALSE), "%",
-                                        '</br>Cases (', format(defaultDate1, "%m/%d"), ' - ', format(defaultDate2, "%m/%d"), '): ', format(cases,big.mark=",",scientific=FALSE),
-                                        "</br>Deaths (",format(defaultDate1, "%m/%d")," - ",format(defaultDate2, "%m/%d"),"): ", format(deaths,big.mark=",",scientific=FALSE),
-                                        "</br>Cases Per Million (",format(defaultDate1, "%m/%d")," - ",format(defaultDate2, "%m/%d"),"): ", format(round(casesPerMillion, digits = 1),big.mark=",",scientific=FALSE),
-                                        "</br>Deaths Per Million (",format(defaultDate1, "%m/%d")," - ",format(defaultDate2, "%m/%d"),"): ", format(round(deathsPerMillion, digits = 1),big.mark=",",scientific=FALSE),
-                                        "</br>New Cases (",format(defaultDate2, "%m/%d"),"): ", format(NewCases,big.mark=",",scientific=FALSE),
-                                        "</br>New Deaths (",format(defaultDate2, "%m/%d"),"): ", format(NewDeaths,big.mark=",",scientific=FALSE),
-                                        "</br>New Cases Per Million (",format(defaultDate2, "%m/%d"),"): ", format(round(NewCasesPerMillion, digits = 1), big.mark=",",scientific=FALSE),
-                                        "</br>New Deaths Per Million (",format(defaultDate2, "%m/%d"),"): ", format(round(NewDeathsPerMillion, digits = 1), big.mark=",",scientific=FALSE),
-                                        "</br>State of Emergency: ",format(as.Date(SE), "%m/%d"),
-                                        "</br>School Closure: ",format(as.Date(CS), "%m/%d"),
-                                        "</br>Shelter in Place: ",format(as.Date(SIP), "%m/%d"),
-                                        "</br>Bar/Restuarant Closure: ",format(as.Date(RB), "%m/%d")#, #4-7-2-20
+                                        '</br>Estimated ICU Beds Needed (',format(defaultDate2, "%m/%d/%Y"),"): ", format(round(icu_bed_occ, digits = 1),big.mark=",",scientific=FALSE), #10-8-2020
+                                        '</br>Fraction ICU Beds Needed (',format(defaultDate2, "%m/%d/%Y"),"): ", format(round(perc_icu_occ, digits = 1),big.mark=",",scientific=FALSE), "%", #10-8-2020
+                                        '</br>Cases (', format(defaultDate1, "%m/%d/%Y"), ' - ', format(defaultDate2, "%m/%d/%Y"), '): ', format(cases,big.mark=",",scientific=FALSE), #10-8-2020
+                                        "</br>Deaths (",format(defaultDate1, "%m/%d/%Y")," - ",format(defaultDate2, "%m/%d/%Y"),"): ", format(deaths,big.mark=",",scientific=FALSE), #10-8-2020
+                                        "</br>Cases Per Million (",format(defaultDate1, "%m/%d/%Y")," - ",format(defaultDate2, "%m/%d/%Y"),"): ", format(round(casesPerMillion, digits = 1),big.mark=",",scientific=FALSE), #10-8-2020
+                                        "</br>Deaths Per Million (",format(defaultDate1, "%m/%d/%Y")," - ",format(defaultDate2, "%m/%d/%Y"),"): ", format(round(deathsPerMillion, digits = 1),big.mark=",",scientific=FALSE), #10-8-2020
+                                        "</br>New Cases (",format(defaultDate2, "%m/%d/%Y"),"): ", format(NewCases,big.mark=",",scientific=FALSE), #10-8-2020
+                                        "</br>New Deaths (",format(defaultDate2, "%m/%d/%Y"),"): ", format(NewDeaths,big.mark=",",scientific=FALSE), #10-8-2020
+                                        "</br>New Cases Per Million (",format(defaultDate2, "%m/%d/%Y"),"): ", format(round(NewCasesPerMillion, digits = 1), big.mark=",",scientific=FALSE), #10-8-2020
+                                        "</br>New Deaths Per Million (",format(defaultDate2, "%m/%d/%Y"),"): ", format(round(NewDeathsPerMillion, digits = 1), big.mark=",",scientific=FALSE), #10-8-2020
+                                        "</br>State of Emergency: ",format(as.Date(SE), "%m/%d/%Y"), #10-8-2020
+                                        "</br>School Closure: ",format(as.Date(CS), "%m/%d/%Y"), #10-8-2020
+                                        "</br>Shelter in Place: ",format(as.Date(SIP), "%m/%d/%Y"), #10-8-2020
+                                        "</br>Bar/Restuarant Closure: ",format(as.Date(RB), "%m/%d/%Y")#, #4-7-2-20 #10-8-2020
                                         #"</br>Social Distancing: ",format(as.Date(SD), "%m/%d") #4-7-2-20
                          )
     )
@@ -1791,22 +1791,22 @@ server = function(input, output, session) {
                          hoverinfo = "text",
                          hoveron = "fills",
                          text = ~paste0('</br>State: ', str_to_title(state_name),
-                                        "</br>Doubling time (",format(defaultDate2, "%m/%d"),"): ", format(round(loessN, digits = 1),big.mark=",",scientific=FALSE), " days",
+                                        "</br>Doubling time (",format(defaultDate2, "%m/%d/%Y"),"): ", format(round(loessN, digits = 1),big.mark=",",scientific=FALSE), " days", #10-8-2020
                                         '</br>Total ICU Beds: ', format(round(ICUbeds, digits = 1),big.mark=",",scientific=FALSE),
-                                        '</br>Estimated ICU Beds Needed (',format(defaultDate2, "%m/%d"),"): ", format(round(icu_bed_occ, digits = 1),big.mark=",",scientific=FALSE),
-                                        '</br>Fraction ICU Beds Needed (',format(defaultDate2, "%m/%d"),"): ", format(round(perc_icu_occ, digits = 1),big.mark=",",scientific=FALSE), "%",
-                                        '</br>Cases (', format(defaultDate1, "%m/%d"), ' - ', format(defaultDate2, "%m/%d"), '): ', format(cases,big.mark=",",scientific=FALSE),
-                                        "</br>Deaths (",format(defaultDate1, "%m/%d")," - ",format(defaultDate2, "%m/%d"),"): ", format(deaths,big.mark=",",scientific=FALSE),
-                                        "</br>Cases Per Million (",format(defaultDate1, "%m/%d")," - ",format(defaultDate2, "%m/%d"),"): ", format(round(casesPerMillion, digits = 1),big.mark=",",scientific=FALSE),
-                                        "</br>Deaths Per Million (",format(defaultDate1, "%m/%d")," - ",format(defaultDate2, "%m/%d"),"): ", format(round(deathsPerMillion, digits = 1),big.mark=",",scientific=FALSE),
-                                        "</br>New Cases (",format(defaultDate2, "%m/%d"),"): ", format(NewCases,big.mark=",",scientific=FALSE),
-                                        "</br>New Deaths (",format(defaultDate2, "%m/%d"),"): ", format(NewDeaths,big.mark=",",scientific=FALSE),
-                                        "</br>New Cases Per Million (",format(defaultDate2, "%m/%d"),"): ", format(round(NewCasesPerMillion, digits = 1), big.mark=",",scientific=FALSE),
-                                        "</br>New Deaths Per Million (",format(defaultDate2, "%m/%d"),"): ", format(round(NewDeathsPerMillion, digits = 1), big.mark=",",scientific=FALSE),
-                                        "</br>State of Emergency: ",format(as.Date(SE), "%m/%d"),
-                                        "</br>School Closure: ",format(as.Date(CS), "%m/%d"),
-                                        "</br>Shelter in Place: ",format(as.Date(SIP), "%m/%d"),
-                                        "</br>Bar/Restuarant Closure: ",format(as.Date(RB), "%m/%d")#, #4-7-2-20
+                                        '</br>Estimated ICU Beds Needed (',format(defaultDate2, "%m/%d/%Y"),"): ", format(round(icu_bed_occ, digits = 1),big.mark=",",scientific=FALSE), #10-8-2020
+                                        '</br>Fraction ICU Beds Needed (',format(defaultDate2, "%m/%d/%Y"),"): ", format(round(perc_icu_occ, digits = 1),big.mark=",",scientific=FALSE), "%", #10-8-2020
+                                        '</br>Cases (', format(defaultDate1, "%m/%d/%Y"), ' - ', format(defaultDate2, "%m/%d/%Y"), '): ', format(cases,big.mark=",",scientific=FALSE), #10-8-2020
+                                        "</br>Deaths (",format(defaultDate1, "%m/%d/%Y")," - ",format(defaultDate2, "%m/%d/%Y"),"): ", format(deaths,big.mark=",",scientific=FALSE), #10-8-2020
+                                        "</br>Cases Per Million (",format(defaultDate1, "%m/%d/%Y")," - ",format(defaultDate2, "%m/%d/%Y"),"): ", format(round(casesPerMillion, digits = 1),big.mark=",",scientific=FALSE), #10-8-2020
+                                        "</br>Deaths Per Million (",format(defaultDate1, "%m/%d/%Y")," - ",format(defaultDate2, "%m/%d/%Y"),"): ", format(round(deathsPerMillion, digits = 1),big.mark=",",scientific=FALSE), #10-8-2020
+                                        "</br>New Cases (",format(defaultDate2, "%m/%d/%Y"),"): ", format(NewCases,big.mark=",",scientific=FALSE), #10-8-2020
+                                        "</br>New Deaths (",format(defaultDate2, "%m/%d/%Y"),"): ", format(NewDeaths,big.mark=",",scientific=FALSE), #10-8-2020
+                                        "</br>New Cases Per Million (",format(defaultDate2, "%m/%d/%Y"),"): ", format(round(NewCasesPerMillion, digits = 1), big.mark=",",scientific=FALSE), #10-8-2020
+                                        "</br>New Deaths Per Million (",format(defaultDate2, "%m/%d/%Y"),"): ", format(round(NewDeathsPerMillion, digits = 1), big.mark=",",scientific=FALSE), #10-8-2020
+                                        "</br>State of Emergency: ",format(as.Date(SE), "%m/%d/%Y"), #10-8-2020
+                                        "</br>School Closure: ",format(as.Date(CS), "%m/%d/%Y"), #10-8-2020
+                                        "</br>Shelter in Place: ",format(as.Date(SIP), "%m/%d/%Y"), #10-8-2020
+                                        "</br>Bar/Restuarant Closure: ",format(as.Date(RB), "%m/%d/%Y")#, #4-7-2-20 #10-8-2020
                                         # "</br>Social Distancing: ",format(as.Date(SD), "%m/%d") #4-7-2-20
                          )
     )
@@ -1873,21 +1873,21 @@ server = function(input, output, session) {
       # plotlyProxyInvoke("restyle",list(text = paste0("Cases: ",dat$cases)))
       plotlyProxyInvoke("restyle",list(text = paste0('</br>State: ', str_to_title(dat$state_name),
                                                      '</br>Total ICU Beds: ', format(round(dat$ICUbeds, digits = 1),big.mark=",",scientific=FALSE),
-                                                     '</br>Estimated ICU Beds Needed (',format(input$daterange1[2], "%m/%d"),"): ", format(round(dat$icu_bed_occ, digits = 1),big.mark=",",scientific=FALSE),
-                                                     '</br>Fraction ICU Beds Needed (',format(input$daterange1[2], "%m/%d"),"): ", format(round(dat$perc_icu_occ, digits = 1),big.mark=",",scientific=FALSE), "%",
-                                                     "</br>Doubling time (",format(input$daterange1[2], "%m/%d"),"): ", format(round(dat$loessN, digits = 1),big.mark=",",scientific=FALSE), " days",
-                                                     '</br>Cases (', format(input$daterange1[1], "%m/%d"), ' - ', format(input$daterange1[2], "%m/%d"), '): ', format(dat$cases,big.mark=",",scientific=FALSE),
-                                                     "</br>Deaths (",format(input$daterange1[1], "%m/%d")," - ",format(input$daterange1[2], "%m/%d"),"): ", format(dat$deaths,big.mark=",",scientific=FALSE),
-                                                     "</br>Cases Per Million (",format(input$daterange1[1], "%m/%d")," - ",format(input$daterange1[2], "%m/%d"),"): ", format(round(dat$casesPerMillion, digits = 1),big.mark=",",scientific=FALSE),
-                                                     "</br>Deaths Per Million (",format(input$daterange1[1], "%m/%d")," - ",format(input$daterange1[2], "%m/%d"),"): ", format(round(dat$deathsPerMillion, digits = 1),big.mark=",",scientific=FALSE),
-                                                     "</br>New Cases (",format(input$daterange1[2], "%m/%d"),"): ", format(dat$NewCases,big.mark=",",scientific=FALSE),
-                                                     "</br>New Deaths (",format(input$daterange1[2], "%m/%d"),"): ", format(dat$NewDeaths,big.mark=",",scientific=FALSE),
-                                                     "</br>New Cases Per Million (",format(input$daterange1[2], "%m/%d"),"): ", format(round(dat$NewCasesPerMillion, digits = 1), big.mark=",",scientific=FALSE),
-                                                     "</br>New Deaths Per Million (",format(input$daterange1[2], "%m/%d"),"): ", format(round(dat$NewDeathsPerMillion, digits = 1), big.mark=",",scientific=FALSE),
-                                                     "</br>State of Emergency: ",format(as.Date(dat$SE), "%m/%d"),
-                                                     "</br>School Closure: ",format(as.Date(dat$CS), "%m/%d"),
-                                                     "</br>Shelter in Place: ",format(as.Date(dat$SIP), "%m/%d"),
-                                                     "</br>Bar/Restuarant Closure: ",format(as.Date(dat$RB), "%m/%d")#, #4-7-2-20
+                                                     '</br>Estimated ICU Beds Needed (',format(input$daterange1[2], "%m/%d/%Y"),"): ", format(round(dat$icu_bed_occ, digits = 1),big.mark=",",scientific=FALSE), #10-8-2020
+                                                     '</br>Fraction ICU Beds Needed (',format(input$daterange1[2], "%m/%d/%Y"),"): ", format(round(dat$perc_icu_occ, digits = 1),big.mark=",",scientific=FALSE), "%", #10-8-2020
+                                                     "</br>Doubling time (",format(input$daterange1[2], "%m/%d/%Y"),"): ", format(round(dat$loessN, digits = 1),big.mark=",",scientific=FALSE), " days", #10-8-2020
+                                                     '</br>Cases (', format(input$daterange1[1], "%m/%d/%Y"), ' - ', format(input$daterange1[2], "%m/%d/%Y"), '): ', format(dat$cases,big.mark=",",scientific=FALSE), #10-8-2020
+                                                     "</br>Deaths (",format(input$daterange1[1], "%m/%d/%Y")," - ",format(input$daterange1[2], "%m/%d/%Y"),"): ", format(dat$deaths,big.mark=",",scientific=FALSE), #10-8-2020
+                                                     "</br>Cases Per Million (",format(input$daterange1[1], "%m/%d/%Y")," - ",format(input$daterange1[2], "%m/%d/%Y"),"): ", format(round(dat$casesPerMillion, digits = 1),big.mark=",",scientific=FALSE), #10-8-2020
+                                                     "</br>Deaths Per Million (",format(input$daterange1[1], "%m/%d/%Y")," - ",format(input$daterange1[2], "%m/%d/%Y"),"): ", format(round(dat$deathsPerMillion, digits = 1),big.mark=",",scientific=FALSE), #10-8-2020
+                                                     "</br>New Cases (",format(input$daterange1[2], "%m/%d/%Y"),"): ", format(dat$NewCases,big.mark=",",scientific=FALSE), #10-8-2020
+                                                     "</br>New Deaths (",format(input$daterange1[2], "%m/%d/%Y"),"): ", format(dat$NewDeaths,big.mark=",",scientific=FALSE), #10-8-2020
+                                                     "</br>New Cases Per Million (",format(input$daterange1[2], "%m/%d/%Y"),"): ", format(round(dat$NewCasesPerMillion, digits = 1), big.mark=",",scientific=FALSE), #10-8-2020
+                                                     "</br>New Deaths Per Million (",format(input$daterange1[2], "%m/%d/%Y"),"): ", format(round(dat$NewDeathsPerMillion, digits = 1), big.mark=",",scientific=FALSE), #10-8-2020
+                                                     "</br>State of Emergency: ",format(as.Date(dat$SE), "%m/%d/%Y"), #10-8-2020
+                                                     "</br>School Closure: ",format(as.Date(dat$CS), "%m/%d/%Y"), #10-8-2020
+                                                     "</br>Shelter in Place: ",format(as.Date(dat$SIP), "%m/%d/%Y"), #10-8-2020
+                                                     "</br>Bar/Restuarant Closure: ",format(as.Date(dat$RB), "%m/%d/%Y")#, #4-7-2-20 #10-8-2020
                                                      # "</br>Social Distancing: ",format(as.Date(dat$SD), "%m/%d") #4-7-2-20
       )))
   })
@@ -2049,18 +2049,18 @@ server = function(input, output, session) {
                          hoveron = "fills",
                          text = ~paste0('</br>State: ', str_to_title(State),
                                         '</br>County: ', str_to_title(County),
-                                        "</br>Doubling time (",format(isolate(input$daterange1[2]), "%m/%d"),"): ", format(round(loessN, digits = 1),big.mark=",",scientific=FALSE), " days",
+                                        "</br>Doubling time (",format(isolate(input$daterange1[2]), "%m/%d/%Y"),"): ", format(round(loessN, digits = 1),big.mark=",",scientific=FALSE), " days", #10-8-2020
                                         '</br>Total ICU Beds: ', format(round(ICUbeds, digits = 1),big.mark=",",scientific=FALSE),
-                                        '</br>Estimated ICU Beds Needed (',format(input$daterange1[2], "%m/%d"),"): ", format(round(icu_bed_occ, digits = 1),big.mark=",",scientific=FALSE),
-                                        '</br>Fraction ICU Beds Needed (',format(input$daterange1[2], "%m/%d"),"): ", format(round(perc_icu_occ, digits = 1),big.mark=",",scientific=FALSE), "%",
-                                        '</br>Cases (', format(isolate(input$daterange1[1]), "%m/%d"), ' - ', format(isolate(input$daterange1[2]), "%m/%d"), '): ', format(cases,big.mark=",",scientific=FALSE),
-                                        "</br>Deaths (",format(isolate(input$daterange1[1]), "%m/%d")," - ",format(isolate(input$daterange1[2]), "%m/%d"),"): ", format(deaths,big.mark=",",scientific=FALSE),
-                                        "</br>Cases Per Million (",format(isolate(input$daterange1[1]), "%m/%d")," - ",format(isolate(input$daterange1[2]), "%m/%d"),"): ", format(round(casesPerMillion, digits = 1),big.mark=",",scientific=FALSE),
-                                        "</br>Deaths Per Million (",format(isolate(input$daterange1[1]), "%m/%d")," - ",format(isolate(input$daterange1[2]), "%m/%d"),"): ", format(round(deathsPerMillion, digits = 1),big.mark=",",scientific=FALSE),
-                                        "</br>New Cases (",format(isolate(input$daterange1[2]), "%m/%d"),"): ", format(NewCases,big.mark=",",scientific=FALSE),
-                                        "</br>New Deaths (",format(isolate(input$daterange1[2]), "%m/%d"),"): ", format(NewDeaths,big.mark=",",scientific=FALSE),
-                                        "</br>New Cases Per Million (",format(isolate(input$daterange1[2]), "%m/%d"),"): ", format(round(NewCasesPerMillion, digits = 1), big.mark=",",scientific=FALSE),
-                                        "</br>New Deaths Per Million (",format(isolate(input$daterange1[2]), "%m/%d"),"): ", format(round(NewDeathsPerMillion, digits = 1), big.mark=",",scientific=FALSE)
+                                        '</br>Estimated ICU Beds Needed (',format(input$daterange1[2], "%m/%d/%Y"),"): ", format(round(icu_bed_occ, digits = 1),big.mark=",",scientific=FALSE), #10-8-2020
+                                        '</br>Fraction ICU Beds Needed (',format(input$daterange1[2], "%m/%d/%Y"),"): ", format(round(perc_icu_occ, digits = 1),big.mark=",",scientific=FALSE), "%", #10-8-2020
+                                        '</br>Cases (', format(isolate(input$daterange1[1]), "%m/%d/%Y"), ' - ', format(isolate(input$daterange1[2]), "%m/%d/%Y"), '): ', format(cases,big.mark=",",scientific=FALSE), #10-8-2020
+                                        "</br>Deaths (",format(isolate(input$daterange1[1]), "%m/%d/%Y")," - ",format(isolate(input$daterange1[2]), "%m/%d/%Y"),"): ", format(deaths,big.mark=",",scientific=FALSE), #10-8-2020
+                                        "</br>Cases Per Million (",format(isolate(input$daterange1[1]), "%m/%d/%Y")," - ",format(isolate(input$daterange1[2]), "%m/%d/%Y"),"): ", format(round(casesPerMillion, digits = 1),big.mark=",",scientific=FALSE), #10-8-2020
+                                        "</br>Deaths Per Million (",format(isolate(input$daterange1[1]), "%m/%d/%Y")," - ",format(isolate(input$daterange1[2]), "%m/%d/%Y"),"): ", format(round(deathsPerMillion, digits = 1),big.mark=",",scientific=FALSE), #10-8-2020
+                                        "</br>New Cases (",format(isolate(input$daterange1[2]), "%m/%d/%Y"),"): ", format(NewCases,big.mark=",",scientific=FALSE), #10-8-2020
+                                        "</br>New Deaths (",format(isolate(input$daterange1[2]), "%m/%d/%Y"),"): ", format(NewDeaths,big.mark=",",scientific=FALSE), #10-8-2020
+                                        "</br>New Cases Per Million (",format(isolate(input$daterange1[2]), "%m/%d/%Y"),"): ", format(round(NewCasesPerMillion, digits = 1), big.mark=",",scientific=FALSE), #10-8-2020
+                                        "</br>New Deaths Per Million (",format(isolate(input$daterange1[2]), "%m/%d/%Y"),"): ", format(round(NewDeathsPerMillion, digits = 1), big.mark=",",scientific=FALSE) #10-8-2020
                          )
     ))
     isolate(p3 <- add_sf(p3,data = dat[which(is.na(dat$value)),],
@@ -2076,18 +2076,18 @@ server = function(input, output, session) {
                          hoveron = "fills",
                          text = ~paste0('</br>State: ', str_to_title(State),
                                         '</br>County: ', str_to_title(County),
-                                        "</br>Doubling time (",format(isolate(input$daterange1[2]), "%m/%d"),"): ", format(round(loessN, digits = 1),big.mark=",",scientific=FALSE), " days",
+                                        "</br>Doubling time (",format(isolate(input$daterange1[2]), "%m/%d/%Y"),"): ", format(round(loessN, digits = 1),big.mark=",",scientific=FALSE), " days", #10-8-2020
                                         '</br>Total ICU Beds: ', format(round(ICUbeds, digits = 1),big.mark=",",scientific=FALSE),
-                                        '</br>Estimated ICU Beds Needed (',format(input$daterange1[2], "%m/%d"),"): ", format(round(icu_bed_occ, digits = 1),big.mark=",",scientific=FALSE),
-                                        '</br>Fraction ICU Beds Needed (',format(input$daterange1[2], "%m/%d"),"): ", format(round(perc_icu_occ, digits = 1),big.mark=",",scientific=FALSE), "%",
-                                        '</br>Cases (', format(isolate(input$daterange1[1]), "%m/%d"), ' - ', format(isolate(input$daterange1[2]), "%m/%d"), '): ', format(cases,big.mark=",",scientific=FALSE),
-                                        "</br>Deaths (",format(isolate(input$daterange1[1]), "%m/%d")," - ",format(isolate(input$daterange1[2]), "%m/%d"),"): ", format(deaths,big.mark=",",scientific=FALSE),
-                                        "</br>Cases Per Million (",format(isolate(input$daterange1[1]), "%m/%d")," - ",format(isolate(input$daterange1[2]), "%m/%d"),"): ", format(round(casesPerMillion, digits = 1),big.mark=",",scientific=FALSE),
-                                        "</br>Deaths Per Million (",format(isolate(input$daterange1[1]), "%m/%d")," - ",format(isolate(input$daterange1[2]), "%m/%d"),"): ", format(round(deathsPerMillion, digits = 1),big.mark=",",scientific=FALSE),
-                                        "</br>New Cases (",format(isolate(input$daterange1[2]), "%m/%d"),"): ", format(NewCases,big.mark=",",scientific=FALSE),
-                                        "</br>New Deaths (",format(isolate(input$daterange1[2]), "%m/%d"),"): ", format(NewDeaths,big.mark=",",scientific=FALSE),
-                                        "</br>New Cases Per Million (",format(isolate(input$daterange1[2]), "%m/%d"),"): ", format(round(NewCasesPerMillion, digits = 1), big.mark=",",scientific=FALSE),
-                                        "</br>New Deaths Per Million (",format(isolate(input$daterange1[2]), "%m/%d"),"): ", format(round(NewDeathsPerMillion, digits = 1), big.mark=",",scientific=FALSE)
+                                        '</br>Estimated ICU Beds Needed (',format(input$daterange1[2], "%m/%d/%Y"),"): ", format(round(icu_bed_occ, digits = 1),big.mark=",",scientific=FALSE), #10-8-2020
+                                        '</br>Fraction ICU Beds Needed (',format(input$daterange1[2], "%m/%d/%Y"),"): ", format(round(perc_icu_occ, digits = 1),big.mark=",",scientific=FALSE), "%", #10-8-2020
+                                        '</br>Cases (', format(isolate(input$daterange1[1]), "%m/%d/%Y"), ' - ', format(isolate(input$daterange1[2]), "%m/%d/%Y"), '): ', format(cases,big.mark=",",scientific=FALSE), #10-8-2020
+                                        "</br>Deaths (",format(isolate(input$daterange1[1]), "%m/%d/%Y")," - ",format(isolate(input$daterange1[2]), "%m/%d/%Y"),"): ", format(deaths,big.mark=",",scientific=FALSE), #10-8-2020
+                                        "</br>Cases Per Million (",format(isolate(input$daterange1[1]), "%m/%d/%Y")," - ",format(isolate(input$daterange1[2]), "%m/%d/%Y"),"): ", format(round(casesPerMillion, digits = 1),big.mark=",",scientific=FALSE), #10-8-2020
+                                        "</br>Deaths Per Million (",format(isolate(input$daterange1[1]), "%m/%d/%Y")," - ",format(isolate(input$daterange1[2]), "%m/%d/%Y"),"): ", format(round(deathsPerMillion, digits = 1),big.mark=",",scientific=FALSE), #10-8-2020
+                                        "</br>New Cases (",format(isolate(input$daterange1[2]), "%m/%d/%Y"),"): ", format(NewCases,big.mark=",",scientific=FALSE), #10-8-2020
+                                        "</br>New Deaths (",format(isolate(input$daterange1[2]), "%m/%d/%Y"),"): ", format(NewDeaths,big.mark=",",scientific=FALSE), #10-8-2020
+                                        "</br>New Cases Per Million (",format(isolate(input$daterange1[2]), "%m/%d/%Y"),"): ", format(round(NewCasesPerMillion, digits = 1), big.mark=",",scientific=FALSE), #10-8-2020
+                                        "</br>New Deaths Per Million (",format(isolate(input$daterange1[2]), "%m/%d/%Y"),"): ", format(round(NewDeathsPerMillion, digits = 1), big.mark=",",scientific=FALSE) #10-8-2020
                          )
     ))
     suppressWarnings(isolate(p3 <- layout(p3, showlegend = FALSE)))
@@ -2130,18 +2130,18 @@ server = function(input, output, session) {
     plotlyProxy("stateMapPlot", session) %>%
       plotlyProxyInvoke("restyle",list(text = paste0('</br>State: ', str_to_title(dat$State),
                                                      '</br>County: ', str_to_title(dat$County),
-                                                     "</br>Doubling Time (",format(isolate(input$daterange1[2]), "%m/%d"),"): ", format(round(dat$loessN, digits = 1), big.mark=",",scientific=FALSE), " days",
+                                                     "</br>Doubling Time (",format(isolate(input$daterange1[2]), "%m/%d/%Y"),"): ", format(round(dat$loessN, digits = 1), big.mark=",",scientific=FALSE), " days", #10-8-2020
                                                      '</br>Total ICU Beds: ', format(round(dat$ICUbeds, digits = 1),big.mark=",",scientific=FALSE),
-                                                     '</br>Estimated ICU Beds Needed (',format(input$daterange1[2], "%m/%d"),"): ", format(round(dat$icu_bed_occ, digits = 1),big.mark=",",scientific=FALSE),
-                                                     '</br>Fraction ICU Beds Needed (',format(input$daterange1[2], "%m/%d"),"): ", format(round(dat$perc_icu_occ, digits = 1),big.mark=",",scientific=FALSE), "%",
-                                                     '</br>Cases (', format(input$daterange1[1], "%m/%d"), ' - ', format(input$daterange1[2], "%m/%d"), '): ', format(dat$cases,big.mark=",",scientific=FALSE),
-                                                     "</br>Deaths (",format(input$daterange1[1], "%m/%d")," - ",format(input$daterange1[2], "%m/%d"),"): ", format(dat$deaths,big.mark=",",scientific=FALSE),
-                                                     "</br>Cases Per Million (",format(input$daterange1[1], "%m/%d")," - ",format(input$daterange1[2], "%m/%d"),"): ", format(round(dat$casesPerMillion, digits = 1),big.mark=",",scientific=FALSE),
-                                                     "</br>Deaths Per Million (",format(input$daterange1[1], "%m/%d")," - ",format(input$daterange1[2], "%m/%d"),"): ", format(round(dat$deathsPerMillion, digits = 1),big.mark=",",scientific=FALSE),
-                                                     "</br>New Cases (",format(input$daterange1[2], "%m/%d"),"): ", format(dat$NewCases,big.mark=",",scientific=FALSE),
-                                                     "</br>New Deaths (",format(input$daterange1[2], "%m/%d"),"): ", format(dat$NewDeaths,big.mark=",",scientific=FALSE),
-                                                     "</br>New Cases Per Million (",format(input$daterange1[2], "%m/%d"),"): ", format(round(dat$NewCasesPerMillion, digits = 1), big.mark=",",scientific=FALSE),
-                                                     "</br>New Deaths Per Million (",format(input$daterange1[2], "%m/%d"),"): ", format(round(dat$NewDeathsPerMillion, digits = 1), big.mark=",",scientific=FALSE))))
+                                                     '</br>Estimated ICU Beds Needed (',format(input$daterange1[2], "%m/%d/%Y"),"): ", format(round(dat$icu_bed_occ, digits = 1),big.mark=",",scientific=FALSE), #10-8-2020
+                                                     '</br>Fraction ICU Beds Needed (',format(input$daterange1[2], "%m/%d/%Y"),"): ", format(round(dat$perc_icu_occ, digits = 1),big.mark=",",scientific=FALSE), "%", #10-8-2020
+                                                     '</br>Cases (', format(input$daterange1[1], "%m/%d/%Y"), ' - ', format(input$daterange1[2], "%m/%d/%Y"), '): ', format(dat$cases,big.mark=",",scientific=FALSE), #10-8-2020
+                                                     "</br>Deaths (",format(input$daterange1[1], "%m/%d/%Y")," - ",format(input$daterange1[2], "%m/%d/%Y"),"): ", format(dat$deaths,big.mark=",",scientific=FALSE), #10-8-2020
+                                                     "</br>Cases Per Million (",format(input$daterange1[1], "%m/%d/%Y")," - ",format(input$daterange1[2], "%m/%d/%Y"),"): ", format(round(dat$casesPerMillion, digits = 1),big.mark=",",scientific=FALSE), #10-8-2020
+                                                     "</br>Deaths Per Million (",format(input$daterange1[1], "%m/%d/%Y")," - ",format(input$daterange1[2], "%m/%d/%Y"),"): ", format(round(dat$deathsPerMillion, digits = 1),big.mark=",",scientific=FALSE), #10-8-2020
+                                                     "</br>New Cases (",format(input$daterange1[2], "%m/%d/%Y"),"): ", format(dat$NewCases,big.mark=",",scientific=FALSE), #10-8-2020
+                                                     "</br>New Deaths (",format(input$daterange1[2], "%m/%d/%Y"),"): ", format(dat$NewDeaths,big.mark=",",scientific=FALSE), #10-8-2020
+                                                     "</br>New Cases Per Million (",format(input$daterange1[2], "%m/%d/%Y"),"): ", format(round(dat$NewCasesPerMillion, digits = 1), big.mark=",",scientific=FALSE), #10-8-2020
+                                                     "</br>New Deaths Per Million (",format(input$daterange1[2], "%m/%d/%Y"),"): ", format(round(dat$NewDeathsPerMillion, digits = 1), big.mark=",",scientific=FALSE)))) #10-8-2020
   })
   
   
