@@ -37,8 +37,9 @@ tableDat <- tibble(State = countyDat$state, County = countyDat$county, Date = co
 plotTableDat <- tableDat
 
 # Table for hospitalization and ICU parameters
-parameterTableDat <- tibble(`Date Updated` = as.Date(c("2020-09-15","2020-08-15","2020-06-10")), `Hospitalization Rate` = c(0.0558,0.0826,0.1270), `ICU Rate` = c(0.22908,0.2964,0.4000),
-                            `Parameter Estimation Range Start` = as.Date(c("2020-07-25","2020-06-28","2020-03-07")), `Parameter Estimation Range End` = as.Date(c("2020-09-04","2020-08-08","2020-05-30")))
+parameterTableDat <- tibble(`Date Updated` = as.Date(c("2020-10-15","2020-09-15","2020-08-15","2020-06-10")), `Hospitalization Rate` = c(0.0509,0.0558,0.0826,0.1270), `ICU Rate` = c(0.2607,0.22908,0.2964,0.4000),
+                            `Parameter Estimation Range Start` = as.Date(c("2020-08-22","2020-07-25","2020-06-28","2020-03-07")), `Parameter Estimation Range End` = as.Date(c("2020-10-03","2020-09-04","2020-08-08","2020-05-30")))
+# 10-14-2020
 
 ######
 # Add state data to the county data
@@ -472,7 +473,7 @@ server = function(input, output, session) {
       formatStyle(
         'Date Updated',
         target = 'row',
-        backgroundColor = styleEqual(as.Date('2020-09-15'), c('yellow'))
+        backgroundColor = styleEqual(as.Date('2020-10-15'), c('yellow')) #10-14-2020
       )
   })
   
@@ -1467,7 +1468,7 @@ server = function(input, output, session) {
     # Creat little message under graph that (usually) talks about doubling time
     output$doubling_time = renderText({ 
       if( input$uPlot == "ICUbeds" ){
-        paste("Estimations assume a 5.58% hospitalization rate, 22.9% ICU rate")
+        paste("Estimations assume a 5.09% hospitalization rate, 26.1% ICU rate")
       }else{
         paste('Fastest doubling time in state is ',fastest_dbl$county,': ',as.character(round(fastest_dbl$cur_double)), 'days')         
       }
