@@ -37,9 +37,9 @@ tableDat <- tibble(State = countyDat$state, County = countyDat$county, Date = co
 plotTableDat <- tableDat
 
 # Table for hospitalization and ICU parameters
-parameterTableDat <- tibble(`Date Updated` = as.Date(c("2020-11-16","2020-10-15","2020-09-15","2020-08-15","2020-06-10")), `Hospitalization Rate` = c(0.0502,0.0509,0.0558,0.0826,0.1270), `ICU Rate` = c(0.2185,0.2607,0.22908,0.2964,0.4000),
-                            `Parameter Estimation Range Start` = as.Date(c("2020-09-26","2020-08-22","2020-07-25","2020-06-28","2020-03-07")), `Parameter Estimation Range End` = as.Date(c("2020-11-07","2020-10-03","2020-09-04","2020-08-08","2020-05-30")))
-# 11-16-2020
+parameterTableDat <- tibble(`Date Updated` = as.Date(c("2020-12-15","2020-11-16","2020-10-15","2020-09-15","2020-08-15","2020-06-10")), `Hospitalization Rate` = c(0.0443,0.0502,0.0509,0.0558,0.0826,0.1270), `ICU Rate` = c(0.2013,0.2185,0.2607,0.22908,0.2964,0.4000),
+                            `Parameter Estimation Range Start` = as.Date(c("2020-10-24","2020-09-26","2020-08-22","2020-07-25","2020-06-28","2020-03-07")), `Parameter Estimation Range End` = as.Date(c("2020-12-05","2020-11-07","2020-10-03","2020-09-04","2020-08-08","2020-05-30")))
+# 12-15-2020
 
 ######
 # Add state data to the county data
@@ -473,7 +473,7 @@ server = function(input, output, session) {
       formatStyle(
         'Date Updated',
         target = 'row',
-        backgroundColor = styleEqual(as.Date('2020-11-16'), c('yellow')) #11-16-2020
+        backgroundColor = styleEqual(as.Date('2020-12-15'), c('yellow')) #12-15-2020
       )
   })
   
@@ -1468,7 +1468,7 @@ server = function(input, output, session) {
     # Creat little message under graph that (usually) talks about doubling time
     output$doubling_time = renderText({ 
       if( input$uPlot == "ICUbeds" ){
-        paste("Estimations assume a 5.02% hospitalization rate, 21.9% ICU rate") #11-16-2020
+        paste("Estimations assume a 4.43% hospitalization rate, 20.1% ICU rate") #12-15-2020
       }else{
         paste('Fastest doubling time in state is ',fastest_dbl$county,': ',as.character(round(fastest_dbl$cur_double)), 'days')         
       }
