@@ -362,8 +362,11 @@ icu_los <- 10
 # hosp_frac <- 0.0328 #1-14-2021
 # icu_frac <- 0.1978 #1-14-2021
 
-hosp_frac <- 0.0339 #2-15-2021
-icu_frac <- 0.1992 #2-15-2021
+# hosp_frac <- 0.0339 #2-15-2021
+# icu_frac <- 0.1992 #2-15-2021
+
+hosp_frac <- 0.0419 #3-15-2021
+icu_frac <- 0.2083 #3-15-2021
 
 # icu_frac <- 2.380952 #~42 percent of patients in the ICU die #8-14-2020 - https://www.healthline.com/health-news/covid-19-mortality-is-going-down-in-icus-what-this-means-for-the-pandemic#The-mortality-rate-is-dropping,-but-its-still-high
 min_cases <- 100
@@ -957,3 +960,4 @@ save.image(file = "./DataFiles/CovidCountiesWorkspace.RData")
 
 # countyDat <- countyDat[which(countyDat$date <= as.Date("2020-04-15")),]
 # stateDat <- stateDat[which(stateDat$date <= as.Date("2020-04-15")),]
+
